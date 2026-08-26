@@ -239,9 +239,13 @@ export interface DigilockerDocument {
 
 export interface CalendarEntry {
   id: string;
-  date: string; // ISO
+  date: string; // ISO decision-expected date
   title: string;
   reason: "sla_deadline" | "renewal" | "followup";
   relatedTaskId?: string;
   severity: "info" | "warning" | "urgent";
+  /** escalation context */
+  service?: string;
+  applicationRef?: string;
+  submittedAt?: string;
 }

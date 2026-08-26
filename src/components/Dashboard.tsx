@@ -257,8 +257,11 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <a href="/benefits" className="mr-1 font-medium text-slate-600 hover:text-orange-600 border border-slate-200 rounded-full px-3.5 py-1.5 hover:border-orange-400 transition">
+          <a href="/benefits" className="font-medium text-slate-600 hover:text-saffron border border-slate-200 rounded-full px-3.5 py-1.5 hover:border-saffron/50 transition">
             💰 My Benefits
+          </a>
+          <a href="/calendar" className="font-medium text-slate-600 hover:text-saffron border border-slate-200 rounded-full px-3.5 py-1.5 hover:border-saffron/50 transition">
+            📅 Calendar
           </a>
           <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 grid place-items-center font-semibold">
             {profile.name[0]}

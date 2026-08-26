@@ -169,6 +169,9 @@ export function buildCalendar(journey: Journey, now = new Date()): CalendarEntry
       reason: "sla_deadline",
       relatedTaskId: task.id,
       severity: daysLeft < 0 ? "urgent" : daysLeft <= 5 ? "warning" : "info",
+      service: task.service,
+      applicationRef: task.applicationRef,
+      submittedAt: task.submittedAt,
     });
   }
   return entries.sort((a, b) => a.date.localeCompare(b.date));
