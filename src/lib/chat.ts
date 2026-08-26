@@ -133,10 +133,10 @@ function validateActions(raw: unknown, req: ChatRequest): ChatAction[] {
       const proposal = list.find((a) => a.taskId === t.id);
       if (!proposal || !proposal.label) continue;
       if (t.status === "ready") {
-        valid.push({ taskId: t.id, kind: (proposal.kind === "mark_done" ? "mark_done" : "open_form"), label: String(proposal.label).slice(0, 40) });
+        valid.push({ journeyId: j.id, taskId: t.id, kind: (proposal.kind === "mark_done" ? "mark_done" : "open_form"), label: String(proposal.label).slice(0, 40) });
       } else if (t.status === "action_required" || t.status === "in_progress") {
         // only opening the form/detail view makes sense here
-        valid.push({ taskId: t.id, kind: "open_form", label: String(proposal.label).slice(0, 40) });
+        valid.push({ journeyId: j.id, taskId: t.id, kind: "open_form", label: String(proposal.label).slice(0, 40) });
       }
     }
   }

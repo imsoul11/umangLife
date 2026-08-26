@@ -218,6 +218,8 @@ export interface ChatResponse {
 
 /** A proposed user action attached to an assistant message. Server-validated. */
 export interface ChatAction {
+  /** journey that owns this task — resolves same-id tasks in different journeys */
+  journeyId: string;
   taskId: string;
   kind: "open_form" | "mark_done";
   label: string;

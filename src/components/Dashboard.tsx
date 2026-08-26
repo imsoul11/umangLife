@@ -205,6 +205,7 @@ export default function Dashboard() {
           content: `${submitOnly ? "📨 Submitted" : "✓ Recorded"} — ${target.title}.${refNote}${unlockNote}`,
           ts: Date.now() + 1,
           actions: newlyReady.slice(0, 2).map((t) => ({
+            journeyId,
             taskId: t.id,
             kind: "open_form" as const,
             label: t.title.length > 30 ? t.title.slice(0, 28) + "…" : t.title,
@@ -225,10 +226,10 @@ export default function Dashboard() {
     [sendMessage],
   );
 
-  /** Chat chip → same execution paths as the graph UI. */
+  /** Chat chip → same execution paths as the graph UI. server stamps journeyId. */
   const handleChatAction = useCallback(
     (a: ChatAction) => {
-      const owner = journeys.find((j) => j.tasks.some((t) => t.id === a.taskId));
+      const owner = journeys.find((j) => j.id === a.journeyId) ?? journeys.find((j) => j.tasks.some((t) => t.id === a.taskId));
       if (!owner) return;
       const t = computeTaskStatuses(owner, MOCK_DIGILOCKER_DOCS).find((x) => x.id === a.taskId);
       if (!t || t.status === "locked" || t.status === "done") return;
