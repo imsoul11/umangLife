@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CalendarEntry, ChatAction, ChatMessage, CitizenProfile, Journey, TaskInstance } from "@/lib/types";
 import { MOCK_DIGILOCKER_DOCS, MOCK_PROFILE } from "@/data/mocks";
-import { buildCalendar, byUrgencyDesc, computeTaskStatuses, computeUrgency } from "@/lib/engine";
+import { buildCalendar, computeTaskStatuses } from "@/lib/engine";
 import TaskWizard from "@/components/TaskWizard";
 import JourneyBuilder, { JOURNEY_BUILD_STAGES, JOURNEY_BUILD_STEP_MS } from "@/components/JourneyBuilder";
 import JourneyGraph from "@/components/JourneyGraph";
@@ -242,9 +242,6 @@ export default function Dashboard() {
     [journeys, completeTask],
   );
 
-  const readyNow = allTasks.filter((t) => t.status === "ready").sort(byUrgencyDesc);
-  const needsAction = allTasks.filter((t) => t.status === "action_required").sort(byUrgencyDesc);
-
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 border-b border-indigo-ink/10 bg-white/70 backdrop-blur-lg px-5 lg:px-6 py-3 flex items-center justify-between">
@@ -282,10 +279,6 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto p-4 lg:p-6 grid lg:grid-cols-[1fr_400px] gap-4 lg:gap-6">
         <section className="space-y-4 min-w-0">
           {/* Welcome back — reconstructed entirely from persisted state */}
-          {!building && journeys.length > 0 && (
-            <WelcomeBackCard ready={readyNow} actionNeeded={needsAction} />
-          )}
-
           {!building && journeys.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
               {journeys.map((j) => {
@@ -345,34 +338,6 @@ export default function Dashboard() {
 }
 
 /* ---------------- subcomponents ---------------- */
-
-function WelcomeBackCard({
-  ready,
-  actionNeeded,
-}: {
-  ready: TaskInstance[];
-  actionNeeded: TaskInstance[];
-}) {
-  if (ready.length === 0 && actionNeeded.length === 0) return null;
-  return (
-    <div className="anim-rise bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border border-orange-200 p-4">
-      <p className="text-sm font-semibold text-slate-800">
-        👋 You have {ready.length + actionNeeded.length} thing{ready.length + actionNeeded.length !== 1 ? "s" : ""} to take care of.
-      </p>
-      <ul className="mt-1 space-y-1">
-        {[...actionNeeded.map((t) => ({ t, icon: "⚠️" })), ...ready.map((t) => ({ t, icon: "🔵" }))].slice(0, 4).map(({ t, icon }) => {
-          const u = computeUrgency(t);
-          return (
-            <li key={t.id + t.title} className="flex items-center justify-between gap-3 text-xs bg-white/70 rounded-lg px-3 py-2">
-              <span className="truncate text-slate-700">{icon} {t.title}{u ? ` — ${u.chip}` : ""}</span>
-              <span className="shrink-0 text-slate-600">{t.applicationRef ? `ref ${t.applicationRef}` : t.status === "ready" ? "ready now" : "needs document"}</span>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
 
 function EmptyState({ onPrompt }: { onPrompt: (t: string) => void }) {
   return (
