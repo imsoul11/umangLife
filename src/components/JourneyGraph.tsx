@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Background,
   BackgroundVariant,
@@ -9,6 +9,8 @@ import {
   MarkerType,
   Position,
   ReactFlow,
+  ReactFlowProvider,
+  useReactFlow,
   type Edge,
   type Node,
   type NodeProps,
@@ -95,7 +97,7 @@ function TaskNode({ data }: NodeProps) {
 
 const nodeTypes = { task: TaskNode };
 
-export default function JourneyGraph({
+function JourneyGraphInner({
   tasks,
   onSelect,
   /** when defined, only the first N tasks (topological order) are shown — used for the step-by-step build-in */
@@ -106,6 +108,7 @@ export default function JourneyGraph({
   revealCount?: number;
 }) {
   const [view, setView] = useState<"graph" | "list">("graph");
+  const rf = useReactFlow();
 
   const { nodes, edges } = useMemo(() => {
     const layers = getLayers(tasks);
@@ -171,6 +174,14 @@ export default function JourneyGraph({
     return { nodes, edges };
   }, [tasks, revealCount]);
 
+  // keep the WHOLE graph perfectly framed as nodes stream in
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      rf.fitView({ padding: 0.22, duration: 450 });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [rf, nodes.length]);
+
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
@@ -191,7 +202,7 @@ export default function JourneyGraph({
       </div>
 
       {view === "graph" ? (
-        <div className="h-[520px] rounded-2xl border border-slate-200 bg-white overflow-hidden">
+        <div className="h-[640px] rounded-2xl border border-slate-200 bg-white overflow-hidden">
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -201,9 +212,10 @@ export default function JourneyGraph({
               if (t && t.status !== "locked") onSelect(t);
             }}
             fitView
-            fitViewOptions={{ padding: 0.15 }}
+            fitViewOptions={{ padding: 0.22 }}
             proOptions={{ hideAttribution: true }}
-            minZoom={0.4}
+            minZoom={0.35}
+            maxZoom={1.05}
             nodesConnectable={false}
             elementsSelectable={false}
           >
@@ -222,6 +234,19 @@ export default function JourneyGraph({
         <span>drag nodes · scroll to zoom · drag canvas to pan</span>
       </div>
     </div>
+  );
+}
+
+/** Provider wrapper so the inner graph can auto-refit as nodes stream in. */
+export default function JourneyGraph(props: {
+  tasks: TaskInstance[];
+  onSelect: (t: TaskInstance) => void;
+  revealCount?: number;
+}) {
+  return (
+    <ReactFlowProvider>
+      <JourneyGraphInner {...props} />
+    </ReactFlowProvider>
   );
 }
 
