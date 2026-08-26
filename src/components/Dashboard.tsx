@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { CalendarEntry, ChatMessage, CitizenProfile, Journey, TaskInstance } from "@/lib/types";
+import type { CalendarEntry, ChatAction, ChatMessage, CitizenProfile, Journey, TaskInstance } from "@/lib/types";
 import { MOCK_DIGILOCKER_DOCS, MOCK_PROFILE } from "@/data/mocks";
 import { SCHEMES } from "@/data/schemes";
 import { buildCalendar, byUrgencyDesc, computeTaskStatuses, computeUrgency, matchSchemes } from "@/lib/engine";
@@ -83,6 +83,7 @@ export default function Dashboard() {
           role: "assistant",
           content: data.reply ?? data.error ?? "Something went wrong.",
           ts: Date.now(),
+          actions: data.actions,
         };
         setMessages((m) => [...m, reply]);
         if (data.detection?.journey) {
@@ -127,6 +128,22 @@ export default function Dashboard() {
       setActiveTask(null);
     },
     [],
+  );
+
+  const handleChatAction = useCallback(
+    (a: ChatAction) => {
+      const owner = journeys.find((j) => j.tasks.some((t) => t.id === a.taskId));
+      if (!owner) return;
+      const t = computeTaskStatuses(owner, MOCK_DIGILOCKER_DOCS).find((x) => x.id === a.taskId);
+      if (!t || t.status === "locked" || t.status === "done") return;
+      setActiveId(owner.id);
+      if (a.kind === "mark_done") {
+        completeTask(owner.id, t.id, Boolean(t.slaDays));
+      } else {
+        setActiveTask(t);
+      }
+    },
+    [journeys, completeTask],
   );
 
   const readyNow = allTasks.filter((t) => t.status === "ready").sort(byUrgencyDesc);
@@ -196,7 +213,7 @@ export default function Dashboard() {
         </section>
 
         <section className="lg:h-[calc(100vh-96px)] lg:sticky lg:top-6">
-          <ChatPanel messages={messages} thinking={thinking} onSend={sendMessage} samples={journeys.length === 0 ? SAMPLE_PROMPTS.slice(0, 2) : []} />
+          <ChatPanel messages={messages} thinking={thinking} onSend={sendMessage} onAction={handleChatAction} samples={journeys.length === 0 ? SAMPLE_PROMPTS.slice(0, 2) : []} />
         </section>
       </main>
 

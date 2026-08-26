@@ -184,6 +184,8 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   ts: number;
+  /** action chips attached to assistant messages */
+  actions?: ChatAction[];
 }
 
 /** POST /api/chat request body */
@@ -206,6 +208,15 @@ export interface ChatResponse {
   };
   /** updated tasks when user completed/advanced something via chat */
   journeyUpdate?: Journey;
+  /** tappable action chips rendered under the assistant message */
+  actions?: ChatAction[];
+}
+
+/** A proposed user action attached to an assistant message. Server-validated. */
+export interface ChatAction {
+  taskId: string;
+  kind: "open_form" | "mark_done";
+  label: string;
 }
 
 /** POST /api/journey/[id]/complete — mark task done, get recomputed graph */

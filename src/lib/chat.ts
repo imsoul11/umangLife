@@ -1,4 +1,5 @@
 import type {
+  ChatAction,
   ChatRequest,
   ChatResponse,
   Journey,
@@ -59,8 +60,35 @@ const TOOLS = [
     type: "function" as const,
     function: {
       name: "get_journey_state",
-      description: "Current status of every task in the user's active journey.",
+      description: "Current status of every task in the user's active journeys.",
       parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "suggest_actions",
+      description:
+        "Attach tappable action buttons to your reply so the user can act immediately. Use as your FINAL step whenever your answer names tasks the user can act on now. Only reference task ids that exist; invalid or non-actionable ones are silently dropped.",
+      parameters: {
+        type: "object",
+        properties: {
+          actions: {
+            type: "array",
+            maxItems: 3,
+            items: {
+              type: "object",
+              properties: {
+                taskId: { type: "string", description: "exact task id from get_journey_state / journey context" },
+                kind: { type: "string", enum: ["open_form", "mark_done"] },
+                label: { type: "string", description: "short imperative, e.g. 'Open KYC form'" },
+              },
+              required: ["taskId", "kind", "label"],
+            },
+          },
+        },
+        required: ["actions"],
+      },
     },
   },
 ];
@@ -93,6 +121,26 @@ function createJourney(
 interface ToolOutcome {
   payload: unknown;
   createdJourney?: Journey;
+  actions?: ChatAction[];
+}
+
+/** Validate model-proposed chips against live task state — hallucination firewall. */
+function validateActions(raw: unknown, req: ChatRequest): ChatAction[] {
+  const list = (raw as { actions?: { taskId?: string; kind?: string; label?: string }[] })?.actions ?? [];
+  const valid: ChatAction[] = [];
+  for (const j of req.journeys ?? []) {
+    for (const t of computeTaskStatuses(j, MOCK_DIGILOCKER_DOCS)) {
+      const proposal = list.find((a) => a.taskId === t.id);
+      if (!proposal || !proposal.label) continue;
+      if (t.status === "ready") {
+        valid.push({ taskId: t.id, kind: (proposal.kind === "mark_done" ? "mark_done" : "open_form"), label: String(proposal.label).slice(0, 40) });
+      } else if (t.status === "action_required" || t.status === "in_progress") {
+        // only opening the form/detail view makes sense here
+        valid.push({ taskId: t.id, kind: "open_form", label: String(proposal.label).slice(0, 40) });
+      }
+    }
+  }
+  return valid.slice(0, 3);
 }
 
 function executeTool(name: string, argsJson: string, req: ChatRequest): ToolOutcome {
@@ -151,6 +199,11 @@ function executeTool(name: string, argsJson: string, req: ChatRequest): ToolOutc
     };
   }
 
+  if (name === "suggest_actions") {
+    const actions = validateActions(args, req);
+    return { payload: { ok: true, attached: actions.length }, actions };
+  }
+
   return { payload: { error: `Unknown tool ${name}` } };
 }
 
@@ -159,6 +212,7 @@ const MAX_TOOL_ROUNDS = 3;
 export async function runChat(req: ChatRequest): Promise<ChatResponse> {
   const { client, model } = getAIClient();
   let detectedJourney: Journey | undefined;
+  let pendingActions: ChatAction[] | undefined;
 
   const messages: OpenAI.ChatCompletionMessageParam[] = [
     { role: "system", content: buildSystemPrompt(req.profile, req.journeys ?? []) },
@@ -185,16 +239,45 @@ export async function runChat(req: ChatRequest): Promise<ChatResponse> {
           : undefined,
       };
     }
-    messages.push(msg);
-    for (const call of msg.tool_calls) {
-      if (!("function" in call) || !call.function) continue;
-      const outcome = executeTool(call.function.name, call.function.arguments, req);
-      if (outcome.createdJourney) detectedJourney = outcome.createdJourney;
-      messages.push({
-        role: "tool",
-        tool_call_id: call.id,
-        content: JSON.stringify(outcome.payload),
-      });
+    let terminalText: string | undefined;
+    const hadSuggestActions = msg.tool_calls.some(
+      (c) => "function" in c && c.function?.name === "suggest_actions",
+    );
+    const nonTerminalCalls = msg.tool_calls.filter(
+      (c) => !("function" in c) || c.function?.name !== "suggest_actions",
+    );
+    if (msg.content && msg.content.trim()) terminalText = msg.content;
+
+    if (!hadSuggestActions || nonTerminalCalls.length > 0) {
+      // keep history well-formed for Gemini: only push when more tool results follow
+      messages.push(msg);
+      for (const call of nonTerminalCalls) {
+        if (!("function" in call) || !call.function) continue;
+        const outcome = executeTool(call.function.name, call.function.arguments, req);
+        if (outcome.createdJourney) detectedJourney = outcome.createdJourney;
+        messages.push({
+          role: "tool",
+          tool_call_id: call.id,
+          content: JSON.stringify(outcome.payload),
+        });
+      }
+    }
+
+    if (hadSuggestActions) {
+      for (const call of msg.tool_calls) {
+        if ("function" in call && call.function?.name === "suggest_actions") {
+          const outcome = executeTool("suggest_actions", call.function.arguments, req);
+          if (outcome.actions?.length) pendingActions = outcome.actions;
+        }
+      }
+      // never re-query the model from a truncated/assistant-ending history
+      return {
+        reply: terminalText ?? (pendingActions?.length ? "Here's what you can do right now:" : ""),
+        detection: detectedJourney
+          ? { lifeEvent: detectedJourney.lifeEvent, entities: detectedJourney.entities, journey: detectedJourney }
+          : undefined,
+        actions: pendingActions,
+      };
     }
   }
 
@@ -203,5 +286,6 @@ export async function runChat(req: ChatRequest): Promise<ChatResponse> {
     detection: detectedJourney
       ? { lifeEvent: detectedJourney.lifeEvent, entities: detectedJourney.entities, journey: detectedJourney }
       : undefined,
+    actions: pendingActions,
   };
 }

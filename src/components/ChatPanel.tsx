@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { ChatMessage } from "@/lib/types";
+import type { ChatAction, ChatMessage } from "@/lib/types";
 
 export default function ChatPanel({
   messages,
   thinking,
   onSend,
+  onAction,
   samples,
 }: {
   messages: ChatMessage[];
   thinking: boolean;
   onSend: (t: string) => void;
+  onAction?: (a: ChatAction) => void;
   samples: string[];
 }) {
   const [input, setInput] = useState("");
@@ -42,14 +44,29 @@ export default function ChatPanel({
           </div>
         )}
         {messages.map((m, i) => (
-          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-            <div
-              className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
-                m.role === "user" ? "bg-orange-600 text-white rounded-br-md" : "bg-slate-100 text-slate-800 rounded-bl-md"
-              }`}
-            >
-              {m.content}
+          <div key={i} className={`space-y-1.5 ${m.role === "user" ? "flex flex-col items-end" : ""}`}>
+            <div className={`flex ${m.role === "user" ? "justify-end" : "justify-start"} w-full`}>
+              <div
+                className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+                  m.role === "user" ? "bg-orange-600 text-white rounded-br-md" : "bg-slate-100 text-slate-800 rounded-bl-md"
+                }`}
+              >
+                {m.content}
+              </div>
             </div>
+            {m.actions && m.actions.length > 0 && onAction && (
+              <div className="flex flex-wrap gap-1.5">
+                {m.actions.map((a) => (
+                  <button
+                    key={a.taskId + a.kind}
+                    onClick={() => onAction(a)}
+                    className="text-xs font-medium px-3 py-1.5 rounded-full bg-white border border-orange-300 text-orange-700 hover:bg-orange-50 hover:border-orange-500 transition shadow-sm"
+                  >
+                    {a.kind === "open_form" ? "📋" : a.kind === "mark_done" ? "🚀" : "•"} {a.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         ))}
         {thinking && (
