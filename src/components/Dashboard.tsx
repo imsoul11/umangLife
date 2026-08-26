@@ -104,6 +104,16 @@ export default function Dashboard() {
 
   /** Drafts survive hopping from wizard to chat and back. */
   const [drafts, setDrafts] = useState<Record<string, Record<string, { value: string; source?: string }>>>({});
+  /** forms already fetched this session — replay no ceremony */
+  const [fetchedForms, setFetchedForms] = useState<Set<string>>(() => new Set());
+  const markFetched = useCallback((id: string) => {
+    setFetchedForms((prev) => {
+      if (prev.has(id)) return prev;
+      const n = new Set(prev);
+      n.add(id);
+      return n;
+    });
+  }, []);
 
   /**
    * Complete or submit a task, recompute the graph, then ACKNOWLEDGE it in the
@@ -275,6 +285,8 @@ export default function Dashboard() {
           docs={MOCK_DIGILOCKER_DOCS}
           profile={profile}
           savedDraft={drafts[activeTask.id]}
+          skipFetch={fetchedForms.has(activeTask.id)}
+          onFetched={() => markFetched(activeTask.id)}
           onClose={() => setActiveTask(null)}
           onComplete={(taskId, sub, ref) => completeTask(activeJourney.id, taskId, sub, ref)}
           onDraftChange={(tid, vals) => setDrafts((d) => ({ ...d, [tid]: vals }))}

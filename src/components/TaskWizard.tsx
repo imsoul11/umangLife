@@ -41,10 +41,12 @@ export default function TaskWizard({
   docs,
   profile,
   savedDraft,
+  skipFetch,
   onClose,
   onComplete,
   onDraftChange,
   onAskAi,
+  onFetched,
 }: {
   task: TaskInstance;
   entities: LifeEventEntities;
@@ -52,18 +54,26 @@ export default function TaskWizard({
   profile: CitizenProfile;
   /** previously typed values, so users can hop to chat and come back */
   savedDraft?: Values;
+  /** form already fetched this session — skip the ceremony */
+  skipFetch?: boolean;
   onClose: () => void;
   onComplete: (taskId: string, submitOnly: boolean, ref?: string) => void;
   onDraftChange?: (taskId: string, values: Values) => void;
   onAskAi?: (fieldLabel: string, taskTitle: string) => void;
+  onFetched?: () => void;
 }) {
   const ctx = useMemo(() => ({ docs, profile, entities }), [docs, profile, entities]);
 
-  const [fetchStage, setFetchStage] = useState(0);
+  const [fetchStage, setFetchStage] = useState(skipFetch ? FETCH_STAGES.length : 0);
   useEffect(() => {
     if (fetchStage >= FETCH_STAGES.length) return;
-    const t = setTimeout(() => setFetchStage((s) => s + 1), FETCH_STAGES[fetchStage].ms);
+    const next = fetchStage + 1;
+    const t = setTimeout(() => {
+      setFetchStage(next);
+      if (next >= FETCH_STAGES.length) onFetched?.();
+    }, FETCH_STAGES[fetchStage].ms);
     return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fire-once-per-fetch semantics
   }, [fetchStage]);
   const formReady = fetchStage >= FETCH_STAGES.length;
 
