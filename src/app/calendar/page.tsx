@@ -17,14 +17,42 @@ interface GrievanceState {
   facts?: string[];
 }
 
+type View = "month" | "timeline";
+
+function toDayKey(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function daysTo(dateIso: string): number {
   return Math.floor((new Date(dateIso).getTime() - Date.now()) / 86_400_000);
 }
+
+function monthCells(year: number, month: number): (Date | null)[] {
+  const first = new Date(year, month, 1);
+  const startDow = first.getDay(); // 0 = Sunday
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells: (Date | null)[] = [];
+  for (let i = 0; i < startDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
+
+const SEV_CLASS = {
+  urgent: "bg-red-500",
+  warning: "bg-amber-400",
+  info: "bg-indigo-300",
+} as const;
 
 export default function CalendarPage() {
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [grievance, setGrievance] = useState<GrievanceState | null>(null);
   const [ready, setReady] = useState(false);
+  const [view, setView] = useState<View>("month");
+  const today = new Date();
+  const [cursor, setCursor] = useState({ y: today.getFullYear(), m: today.getMonth() });
+  const [selectedDay, setSelectedDay] = useState<string>(toDayKey(today.toISOString()));
 
   useEffect(() => {
     try {
@@ -48,6 +76,20 @@ export default function CalendarPage() {
     return all.sort((a, b) => a.date.localeCompare(b.date));
   }, [journeys]);
 
+  const byDay = useMemo(() => {
+    const map = new Map<string, (CalendarEntry & { journey: Journey })[]>();
+    for (const e of entries) {
+      const k = toDayKey(e.date);
+      map.set(k, [...(map.get(k) ?? []), e]);
+    }
+    return map;
+  }, [entries]);
+
+  const firstEntryDay = entries[0] ? toDayKey(entries[0].date) : toDayKey(today.toISOString());
+  const selectedKey = byDay.has(selectedDay) ? selectedDay : byDay.has(firstEntryDay) ? firstEntryDay : selectedDay;
+  const dayEntries = byDay.get(selectedKey) ?? [];
+  const urgentCount = entries.filter((e) => e.severity === "urgent").length;
+
   async function draftGrievance(entry: CalendarEntry) {
     setGrievance({ entry, subject: "", body: "", drafting: true, filing: false });
     const task = allTasksOf(entry, journeys);
@@ -60,18 +102,10 @@ export default function CalendarPage() {
       const res = await fetch("/api/grievance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          task,
-          journey: owner,
-          profile: { name: "Antas Jain", state: "Karnataka" },
-        }),
+        body: JSON.stringify({ task, journey: owner, profile: { name: "Antas Jain", state: "Karnataka" } }),
       });
       const data = await res.json();
-      setGrievance((g) =>
-        g && g.entry.id === entry.id
-          ? { ...g, subject: data.subject ?? "", body: data.body ?? "", drafting: false, facts: data.facts }
-          : g,
-      );
+      setGrievance((g) => (g && g.entry.id === entry.id ? { ...g, subject: data.subject ?? "", body: data.body ?? "", drafting: false, facts: data.facts } : g));
     } catch {
       setGrievance((g) => (g && g.entry.id === entry.id ? { ...g, drafting: false } : g));
     }
@@ -87,30 +121,6 @@ export default function CalendarPage() {
   }
 
   if (!ready) return null;
-  if (journeys.length === 0) {
-    return (
-      <div className="grid place-items-center min-h-[60vh] text-center">
-        <div className="space-y-4">
-          <p className="text-4xl mb-3">📅</p>
-          <p className="text-slate-600 font-medium">No active applications to track yet.</p>
-          <button
-            onClick={() => {
-              const seeded = buildDemoJourneys();
-              setJourneys(seeded);
-              localStorage.setItem(STORAGE_KEY, JSON.stringify({ journeys: seeded, messages: [] }));
-            }}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white text-sm font-semibold shadow-md hover:opacity-95 transition"
-          >
-            ✨ Load demo with live applications (one overdue)
-          </button>
-          <p className="text-xs text-slate-400">or </p>
-          <a href="/" className="text-sm text-saffron font-medium hover:underline">← Start a life event journey</a>
-        </div>
-      </div>
-    );
-  }
-
-  const urgentCount = entries.filter((e) => e.severity === "urgent").length;
 
   return (
     <div className="min-h-screen">
@@ -122,49 +132,137 @@ export default function CalendarPage() {
             <p className="text-[11px] text-slate-500">Every filed application, its decision deadline, and your escalation path</p>
           </div>
         </div>
-        <a href="/" className="text-sm text-saffron font-medium hover:underline">← Back to journeys</a>
+        <div className="flex items-center gap-3">
+          {view === "month" && (
+            <div className="flex items-center gap-1 text-sm">
+              <button onClick={() => setCursor((c) => (c.m === 0 ? { y: c.y - 1, m: 11 } : { y: c.y, m: c.m - 1 }))} className="w-7 h-7 grid place-items-center rounded-lg border border-slate-200 hover:border-saffron text-slate-600">←</button>
+              <span className="w-28 text-center font-medium text-slate-800">
+                {new Date(cursor.y, cursor.m, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+              </span>
+              <button onClick={() => setCursor((c) => (c.m === 11 ? { y: c.y + 1, m: 0 } : { y: c.y, m: c.m + 1 }))} className="w-7 h-7 grid place-items-center rounded-lg border border-slate-200 hover:border-saffron text-slate-600">→</button>
+              <button
+                onClick={() => {
+                  setCursor({ y: today.getFullYear(), m: today.getMonth() });
+                  setSelectedDay(toDayKey(today.toISOString()));
+                }}
+                className="ml-1 px-2.5 py-1 rounded-lg text-xs border border-slate-200 text-slate-600 hover:border-saffron"
+              >
+                Today
+              </button>
+            </div>
+          )}
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs">
+            {(["month", "timeline"] as View[]).map((v) => (
+              <button key={v} onClick={() => setView(v)} className={`px-3 py-1.5 font-medium ${view === v ? "bg-indigo-ink text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`}>
+                {v === "month" ? "Month" : "Timeline"}
+              </button>
+            ))}
+          </div>
+          <a href="/" className="text-sm text-saffron font-medium hover:underline">← Back</a>
+        </div>
       </header>
 
-      <main className="max-w-5xl mx-auto p-4 lg:p-6">
+      <main className="max-w-5xl mx-auto p-4 lg:p-6 space-y-4">
         {urgentCount > 0 && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 anim-rise">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 anim-rise">
             🚨 <b>{urgentCount} application{urgentCount !== 1 ? "s" : ""}</b> past the expected decision date — consider escalating below.
           </div>
         )}
-        {entries.length === 0 ? (
-          <p className="text-slate-500">Submit an application from your journey to see its tracking here.</p>
-        ) : (
-          <div className="space-y-2.5">
-            {entries.map((e, i) => {
-              const dLeft = daysTo(e.date);
-              const overdue = dLeft < 0;
-              return (
-                <div key={e.id + i} className={`anim-rise rounded-xl border p-4 flex items-center gap-4 ${overdue ? "border-red-300 bg-red-50/70" : e.severity === "warning" ? "border-amber-300 bg-amber-50/60" : "border-slate-200 bg-white"}`} style={{ animationDelay: `${i * 45}ms` }}>
-                  <div className={`w-12 h-12 shrink-0 rounded-lg grid place-items-center text-center leading-tight ${overdue ? "bg-red-600 text-white" : "bg-indigo-ink text-white"}`}>
-                    <div className="text-[10px] font-semibold">{new Date(e.date).toLocaleDateString("en-IN", { month: "short" })}</div>
-                    <div className="text-base font-bold leading-none">{new Date(e.date).getDate()}</div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-800 leading-snug">{e.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {e.journey.emoji} {e.journey.title.replace(" Journey", "")} · {e.service?.replace("_", " ")} ·{" "}
-                      <span className="font-mono">{e.applicationRef ?? "no ref yet"}</span>
-                    </p>
-                    <p className={`text-xs mt-0.5 ${overdue ? "font-semibold text-red-700" : dLeft <= 5 ? "text-amber-700" : "text-slate-500"}`}>
-                      {overdue ? `Overdue by ${Math.abs(dLeft)} day${Math.abs(dLeft) !== 1 ? "s" : ""}` : dLeft === 0 ? "Decision expected today" : `In ${dLeft} day${dLeft !== 1 ? "s" : ""}`}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => draftGrievance(e)}
-                    className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold border transition ${
-                      overdue ? "bg-red-600 text-white border-red-600 hover:bg-red-700" : "border-saffron text-saffron hover:bg-saffron hover:text-white"
-                    }`}
-                  >
-                    ⚖️ Escalate
-                  </button>
+
+        {journeys.length === 0 ? (
+          <div className="text-center py-16 space-y-4">
+            <p className="text-4xl">📅</p>
+            <p className="text-slate-600 font-medium">No active applications to track yet.</p>
+            <button
+              onClick={() => {
+                const seeded = buildDemoJourneys();
+                setJourneys(seeded);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({ journeys: seeded, messages: [] }));
+              }}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white text-sm font-semibold shadow-md hover:opacity-95 transition"
+            >
+              ✨ Load demo with live applications (one overdue)
+            </button>
+            <div>
+              <a href="/" className="text-sm text-saffron font-medium hover:underline">← Start a life event journey</a>
+            </div>
+          </div>
+        ) : view === "month" ? (
+          <>
+            {/* ---- month grid ---- */}
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+              <div className="grid grid-cols-7 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-400 bg-slate-50 border-b border-slate-100">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                  <div key={d} className="py-2">{d}</div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7">
+                {monthCells(cursor.y, cursor.m).map((date, i) => {
+                  if (!date) return <div key={i} className="aspect-square" />;
+                  const inMonth = date.getMonth() === cursor.m;
+                  const isToday = toDayKey(date.toISOString()) === toDayKey(today.toISOString());
+                  const k = toDayKey(date.toISOString());
+                  const dayEnts = byDay.get(k) ?? [];
+                  const selected = k === selectedKey;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setSelectedDay(k);
+                        if (date.getMonth() !== cursor.m) setCursor({ y: date.getFullYear(), m: date.getMonth() });
+                      }}
+                      className={`aspect-square p-1.5 border-t border-l border-slate-100 relative flex flex-col items-center justify-between hover:bg-orange-50/70 transition ${inMonth ? "" : "opacity-30"} ${
+                        selected ? "bg-saffron/10 ring-2 ring-inset ring-saffron/60" : ""
+                      }`}
+                    >
+                      <span
+                        className={`text-xs leading-none mt-1 ${
+                          isToday ? "w-5 h-5 rounded-full bg-indigo-ink text-white grid place-items-center font-bold" : "font-medium " + (inMonth ? "text-slate-700" : "text-slate-400")
+                        }`}
+                      >
+                        {date.getDate()}
+                      </span>
+                      {dayEnts.length > 0 && (
+                        <div className="flex gap-0.5 mb-1">
+                          {dayEnts.slice(0, 3).map((e, ei) => (
+                            <span key={ei} className={`w-1.5 h-1.5 rounded-full ${SEV_CLASS[e.severity]}`} />
+                          ))}
+                          {dayEnts.length > 3 && <span className="text-[9px] leading-none text-slate-400">+{dayEnts.length - 3}</span>}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="px-4 py-2 border-t border-slate-100 flex flex-wrap gap-4 text-[10px] text-slate-500">
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500" /> Overdue</span>
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400" /> ≤ 5 days left</span>
+                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-indigo-300" /> In progress</span>
+              </div>
+            </div>
+
+            {/* ---- selected day ---- */}
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                {new Date(selectedKey).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
+              </h3>
+              {dayEntries.length === 0 ? (
+                <p className="text-sm text-slate-400">Nothing due this day.</p>
+              ) : (
+                <div className="space-y-2">
+                  {dayEntries.map((e, i) => (
+                    <EntryRow key={e.id + i} e={e} index={i} onEscalate={() => draftGrievance(e)} />
+                  ))}
                 </div>
-              );
-            })}
+              )}
+            </div>
+          </>
+        ) : (
+          /* ---- timeline ---- */
+          <div className="space-y-2">
+            {entries.map((e, i) => (
+              <EntryRow key={e.id + i} e={e} index={i} onEscalate={() => draftGrievance(e)} />
+            ))}
           </div>
         )}
       </main>
@@ -172,6 +270,39 @@ export default function CalendarPage() {
       {grievance && (
         <GrievanceModal g={grievance} onClose={() => setGrievance(null)} onEdit={(subject, body) => setGrievance((g) => (g ? { ...g, subject, body } : g))} onFile={fileGrievance} />
       )}
+    </div>
+  );
+}
+
+function EntryRow({ e, index, onEscalate }: { e: CalendarEntry & { journey: Journey }; index: number; onEscalate: () => void }) {
+  const dLeft = daysTo(e.date);
+  const overdue = dLeft < 0;
+  return (
+    <div
+      className={`anim-rise rounded-xl border p-4 flex items-center gap-4 ${overdue ? "border-red-300 bg-red-50/70" : e.severity === "warning" ? "border-amber-300 bg-amber-50/60" : "border-slate-200 bg-white"}`}
+      style={{ animationDelay: `${index * 45}ms` }}
+    >
+      <div className={`w-12 h-12 shrink-0 rounded-lg grid place-items-center text-center leading-tight ${overdue ? "bg-red-600 text-white" : "bg-indigo-ink text-white"}`}>
+        <div className="text-[10px] font-semibold">{new Date(e.date).toLocaleDateString("en-IN", { month: "short" })}</div>
+        <div className="text-base font-bold leading-none">{new Date(e.date).getDate()}</div>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-slate-800 leading-snug">{e.title}</p>
+        <p className="text-xs text-slate-500 mt-0.5">
+          {e.journey.emoji} {e.journey.title.replace(" Journey", "")} · {e.service?.replace("_", " ")} · <span className="font-mono">{e.applicationRef ?? "no ref yet"}</span>
+        </p>
+        <p className={`text-xs mt-0.5 ${overdue ? "font-semibold text-red-700" : dLeft <= 5 ? "text-amber-700" : "text-slate-500"}`}>
+          {overdue ? `Overdue by ${Math.abs(dLeft)} day${Math.abs(dLeft) !== 1 ? "s" : ""}` : dLeft === 0 ? "Decision expected today" : `In ${dLeft} day${dLeft !== 1 ? "s" : ""}`}
+        </p>
+      </div>
+      <button
+        onClick={onEscalate}
+        className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold border transition ${
+          overdue ? "bg-red-600 text-white border-red-600 hover:bg-red-700" : "border-saffron text-saffron hover:bg-saffron hover:text-white"
+        }`}
+      >
+        ⚖️ Escalate
+      </button>
     </div>
   );
 }
