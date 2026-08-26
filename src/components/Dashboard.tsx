@@ -75,7 +75,7 @@ export default function Dashboard() {
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: userMsg.content, profile, journeys, history }),
+          body: JSON.stringify({ message: userMsg.content, profile, journeys, focusedJourneyId: activeId, history }),
         });
         const data = await res.json();
         const reply: ChatMessage = {
@@ -99,7 +99,7 @@ export default function Dashboard() {
         setThinking(false);
       }
     },
-    [messages, profile, journeys, thinking],
+    [messages, profile, journeys, activeId, thinking],
   );
 
   /** Drafts survive hopping from wizard to chat and back. */
@@ -274,7 +274,7 @@ export default function Dashboard() {
         </section>
 
         <section className="lg:h-[calc(100vh-96px)] lg:sticky lg:top-6">
-          <ChatPanel messages={messages} thinking={thinking} onSend={sendMessage} onAction={handleChatAction} samples={journeys.length === 0 ? SAMPLE_PROMPTS.slice(0, 2) : []} />
+          <ChatPanel messages={messages} thinking={thinking} onSend={sendMessage} onAction={handleChatAction} samples={journeys.length === 0 ? SAMPLE_PROMPTS.slice(0, 2) : []} scopeLabel={activeJourney ? `${activeJourney.emoji} ${activeJourney.title.replace(" Journey", "")}` : journeys.length ? `${journeys.length} journeys` : undefined} />
         </section>
       </main>
 

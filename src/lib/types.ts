@@ -193,6 +193,8 @@ export interface ChatRequest {
   message: string;
   /** ALL of the user's journeys — enables dedupe + cross-journey recall */
   journeys?: Journey[];
+  /** journey the user is currently viewing — the assistant prioritizes it */
+  focusedJourneyId?: string;
   profile: CitizenProfile;
   history: ChatMessage[];
 }

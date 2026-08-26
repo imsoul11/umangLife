@@ -1,19 +1,24 @@
 import type { CitizenProfile, Journey } from "@/lib/types";
 import { KB_TOPICS } from "@/data/kb";
 
-export function buildSystemPrompt(profile: CitizenProfile, journeys: Journey[]): string {
+export function buildSystemPrompt(
+  profile: CitizenProfile,
+  journeys: Journey[],
+  focusedJourneyId?: string,
+): string {
   const kbIndex = KB_TOPICS.map((t) => `- ${t.slug}: "${t.title}" (${t.department}, updated ${t.lastUpdated})`).join("\n");
 
   const journeyContext = journeys.length
     ? journeys
-        .map((j) =>
-          [
-            `JOURNEY ${j.emoji} "${j.title}" (${j.id.slice(0, 8)}):`,
+        .map((j) => {
+          const focus = j.id === focusedJourneyId;
+          return [
+            `JOURNEY ${j.emoji} "${j.title}" (${j.id.slice(0, 8)})${focus ? "  ← USER IS VIEWING THIS ONE — prioritize it when their question is ambiguous" : ""}:`,
             ...j.tasks.map(
               (t) => `  - ${t.id} [${t.status}]${t.applicationRef ? ` ref:${t.applicationRef}` : ""} ${t.title}`,
             ),
-          ].join("\n"),
-        )
+          ].join("\n");
+        })
         .join("\n")
     : "CURRENT JOURNEYS: none yet.";
 

@@ -9,12 +9,14 @@ export default function ChatPanel({
   onSend,
   onAction,
   samples,
+  scopeLabel,
 }: {
   messages: ChatMessage[];
   thinking: boolean;
   onSend: (t: string) => void;
   onAction?: (a: ChatAction) => void;
   samples: string[];
+  scopeLabel?: string;
 }) {
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -32,8 +34,15 @@ export default function ChatPanel({
   return (
     <div className="h-full flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden">
       <div className="px-4 py-3 border-b border-slate-100">
-        <h3 className="text-sm font-semibold text-slate-800">Assistant</h3>
-        <p className="text-[11px] text-slate-400">Life events in, ordered journeys out</p>
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-slate-800">Assistant</h3>
+          {scopeLabel && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">
+              focused: {scopeLabel}
+            </span>
+          )}
+        </div>
+        <p className="text-[11px] text-slate-400">One advisor · knows all your journeys</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px] lg:min-h-0">

@@ -12,6 +12,7 @@ export async function POST(request: Request) {
       message: body.message,
       profile: body.profile,
       journeys: body.journeys ?? [],
+      focusedJourneyId: body.focusedJourneyId,
       history: body.history ?? [],
     });
     return NextResponse.json(result);

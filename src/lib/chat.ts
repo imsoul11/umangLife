@@ -215,7 +215,7 @@ export async function runChat(req: ChatRequest): Promise<ChatResponse> {
   let pendingActions: ChatAction[] | undefined;
 
   const messages: OpenAI.ChatCompletionMessageParam[] = [
-    { role: "system", content: buildSystemPrompt(req.profile, req.journeys ?? []) },
+    { role: "system", content: buildSystemPrompt(req.profile, req.journeys ?? [], req.focusedJourneyId) },
     ...req.history.slice(-8).map((m) => ({
       role: m.role,
       content: m.content,
