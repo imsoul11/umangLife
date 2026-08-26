@@ -19,11 +19,11 @@ export default function BenefitsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white px-6 py-4 flex items-center justify-between sticky top-0 z-10">
+      <header className="sticky top-0 z-40 border-b border-indigo-ink/10 bg-white/70 backdrop-blur-lg px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-emerald-600 text-white grid place-items-center font-bold">₹</div>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-jade to-indigo-ink text-white grid place-items-center font-bold shadow-md">₹</div>
           <div>
-            <h1 className="font-bold text-slate-900 leading-tight">Your Benefit Matches</h1>
+            <h1 className="font-display font-semibold text-indigo-ink text-lg leading-tight tracking-tight">Your Benefit Matches</h1>
             <p className="text-xs text-slate-500">
               Deterministic eligibility engine · {eligible.length} of {matches.length} schemes matched ·{" "}
               {MOCK_PROFILE.state} resident

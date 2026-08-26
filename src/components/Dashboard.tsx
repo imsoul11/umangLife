@@ -246,13 +246,17 @@ export default function Dashboard() {
   const needsAction = allTasks.filter((t) => t.status === "action_required").sort(byUrgencyDesc);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white px-6 py-4 flex items-center justify-between">
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-40 border-b border-indigo-ink/10 bg-white/70 backdrop-blur-lg px-5 lg:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-orange-600 text-white grid place-items-center font-bold">U</div>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white grid place-items-center font-bold shadow-md shadow-saffron/25">
+            <span className="font-display text-lg leading-none">उ</span>
+          </div>
           <div>
-            <h1 className="font-bold text-slate-900 leading-tight">UMANG Life Journey</h1>
-            <p className="text-xs text-slate-500">Life events → ordered government actions</p>
+            <h1 className="font-display font-semibold text-indigo-ink text-lg leading-tight tracking-tight">
+              UMANG <span className="text-saffron">&middot;</span> Life Journey
+            </h1>
+            <p className="text-[11px] text-slate-500">Life events → ordered government actions</p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-sm">
