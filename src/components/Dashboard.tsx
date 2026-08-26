@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CalendarEntry, ChatAction, ChatMessage, CitizenProfile, Journey, TaskInstance } from "@/lib/types";
 import { MOCK_DIGILOCKER_DOCS, MOCK_PROFILE } from "@/data/mocks";
 import { SCHEMES } from "@/data/schemes";
@@ -24,30 +24,35 @@ export default function Dashboard() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [thinking, setThinking] = useState(false);
   const [activeTask, setActiveTask] = useState<TaskInstance | null>(null);
-  const hydrated = useRef(false);
+  /** gate: never persist until the initial restore has been applied */
+  const [restored, setRestored] = useState(false);
 
   /* ---- persistence: the "database" (swap these two effects for API calls) ---- */
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
+    let cancelled = false;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
         const saved = JSON.parse(raw) as { journeys?: Journey[]; messages?: ChatMessage[] };
         if (saved.journeys?.length) {
           // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from localStorage
           setJourneys(saved.journeys);
-           
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from localStorage
           setActiveId(saved.journeys[0].id);
         }
-         
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from localStorage
         if (saved.messages) setMessages(saved.messages);
-      } catch {}
-    }
-    hydrated.current = true;
+      }
+    } catch {}
+    if (!cancelled) setRestored(true);
+    return () => {
+      cancelled = true;
+    };
   }, []);
   useEffect(() => {
-    if (!hydrated.current) return;
+    if (!restored) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ journeys, messages }));
-  }, [journeys, messages]);
+  }, [restored, journeys, messages]);
 
   const activeJourney = journeys.find((j) => j.id === activeId) ?? null;
   const allTasks: TaskInstance[] = useMemo(
