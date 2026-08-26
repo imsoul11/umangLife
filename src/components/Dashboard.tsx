@@ -8,7 +8,6 @@ import { buildCalendar, byUrgencyDesc, computeTaskStatuses, computeUrgency, matc
 import TaskWizard from "@/components/TaskWizard";
 import JourneyGraph from "@/components/JourneyGraph";
 import ChatPanel from "@/components/ChatPanel";
-import BenefitsPanel from "@/components/BenefitsPanel";
 
 const STORAGE_KEY = "umanglife-session-v2"; // DB swap point: read()
 
@@ -207,7 +206,18 @@ export default function Dashboard() {
               <ProgressCard journey={activeJourney} progress={progress} done={doneCount} total={activeTasks.length} />
               {calendar.length > 0 && <CalendarStrip entries={calendar} />}
               <JourneyGraph tasks={activeTasks} onSelect={setActiveTask} />
-              <BenefitsPanel matches={eligible} nearMisses={matches.filter((m) => !m.eligible).slice(0, 2)} />
+              <a href="/benefits" className="block rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 hover:border-emerald-400 transition">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="text-xl">✅</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-800">{eligible.length} government benefits match your profile</p>
+                      <p className="text-xs text-slate-500 truncate">Sukanya Samriddhi · Gruha Jyothi · +{Math.max(eligible.length - 2, 0)} more — see why you qualify</p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-xs font-medium text-emerald-700">View all →</span>
+                </div>
+              </a>
             </>
           )}
         </section>
