@@ -161,7 +161,7 @@ export default function CalendarPage() {
         setEscalated((prev) => ({ ...prev, [key]: { grievanceId: gid, at: new Date().toISOString() } }));
       }
       setGrievance((g) => (g ? { ...g, filing: false, grievanceId: gid } : g));
-    }, 1400);
+    }, 2000);
   }
 
   if (!ready) return null;

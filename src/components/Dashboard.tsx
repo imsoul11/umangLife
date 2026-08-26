@@ -126,7 +126,7 @@ export default function Dashboard() {
       const t = setTimeout(() => setReveal(null), 0);
       return () => clearTimeout(t);
     }
-    const t = setTimeout(() => setReveal((r) => (r && r.journeyId === reveal.journeyId ? { ...r, n: r.n + 1 } : r)), 190);
+    const t = setTimeout(() => setReveal((r) => (r && r.journeyId === reveal.journeyId ? { ...r, n: r.n + 1 } : r)), 320);
     return () => clearTimeout(t);
   }, [reveal, journeys]);
 

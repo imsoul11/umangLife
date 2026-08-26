@@ -9,9 +9,9 @@ type Values = Record<string, { value: string; source?: string }>;
 
 const STEPS = ["Form", "Verify", "Submit"];
 const FETCH_STAGES = [
-  { label: "Connecting to department portal", ms: 750 },
-  { label: "Fetching official application form", ms: 650 },
-  { label: "Prefilling fields from your authorized data", ms: 850 },
+  { label: "Connecting to department portal", ms: 1100 },
+  { label: "Fetching official application form", ms: 950 },
+  { label: "Prefilling fields from your authorized data", ms: 1250 },
 ];
 
 const SUBMIT_STAGES = [
@@ -122,7 +122,7 @@ export default function TaskWizard({
         setTimeout(() => {
           setSubmitStage(i + 1);
           tick(i + 1);
-        }, 620);
+        }, 840);
       } else {
         setTimeout(() => {
           onComplete(

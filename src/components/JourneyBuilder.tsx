@@ -1,7 +1,7 @@
 "use client";
 
 export const JOURNEY_BUILD_STAGES = 5;
-export const JOURNEY_BUILD_STEP_MS = 1000;
+export const JOURNEY_BUILD_STEP_MS = 1600;
 
 const STAGES = [
   { label: "Analyzing your situation" },
