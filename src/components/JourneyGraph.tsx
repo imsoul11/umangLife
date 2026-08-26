@@ -65,7 +65,7 @@ function TaskNode({ data }: NodeProps) {
             : "border-slate-200 bg-slate-50 border-dashed opacity-70";
 
   return (
-    <div className={`w-[240px] rounded-xl border-2 ${style} bg-clip-padding`}>
+    <div className={`anim-pop w-[240px] rounded-xl border-2 ${style} bg-clip-padding`}>
       <Handle type="target" position={Position.Top} className="!bg-slate-300" />
       <div className="p-3">
         <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -98,26 +98,37 @@ const nodeTypes = { task: TaskNode };
 export default function JourneyGraph({
   tasks,
   onSelect,
+  /** when defined, only the first N tasks (topological order) are shown — used for the step-by-step build-in */
+  revealCount,
 }: {
   tasks: TaskInstance[];
   onSelect: (t: TaskInstance) => void;
+  revealCount?: number;
 }) {
   const [view, setView] = useState<"graph" | "list">("graph");
 
   const { nodes, edges } = useMemo(() => {
     const layers = getLayers(tasks);
+    const flat = layers.flat();
+    const visible =
+      revealCount === undefined
+        ? new Set(flat.map((t) => t.id))
+        : new Set(flat.slice(0, revealCount).map((t) => t.id));
     const nodes: Node[] = [];
     const edges: Edge[] = [];
     const statusOf = new Map(tasks.map((t) => [t.id, t.status]));
 
     layers.forEach((layer) => {
-      const rowWidth = layer.length * NODE_W + (layer.length - 1) * GAP_X;
-      const startX = -(rowWidth / 2);
-      layer.forEach((task, col) => {
+      const rowVisible = layer.filter((t) => visible.has(t.id));
+      rowVisible.forEach((task, col) => {
+        // keep original column layout even while partially revealed
+        const origCol = layer.indexOf(task);
+        const rowWidth = layer.length * NODE_W + (layer.length - 1) * GAP_X;
+        const startX = -(rowWidth / 2);
         nodes.push({
           id: task.id,
           type: "task",
-          position: { x: startX + col * (NODE_W + GAP_X), y: 0 },
+          position: { x: startX + origCol * (NODE_W + GAP_X), y: 0 },
           data: { task },
           draggable: true,
         });
@@ -139,7 +150,9 @@ export default function JourneyGraph({
     }
 
     for (const t of tasks) {
+      if (!visible.has(t.id)) continue;
       for (const dep of t.dependsOn) {
+        if (!visible.has(dep)) continue;
         const srcDone = statusOf.get(dep) === "done";
         edges.push({
           id: `${dep}->${t.id}`,
@@ -156,7 +169,7 @@ export default function JourneyGraph({
       }
     }
     return { nodes, edges };
-  }, [tasks]);
+  }, [tasks, revealCount]);
 
   return (
     <div>

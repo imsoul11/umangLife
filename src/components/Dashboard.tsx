@@ -113,6 +113,23 @@ export default function Dashboard() {
   /** forms already fetched this session — replay no ceremony */
   const [fetchedForms, setFetchedForms] = useState<Set<string>>(() => new Set());
 
+  /* ---- step-by-step graph reveal after the ceremony ---- */
+  const [reveal, setReveal] = useState<{ journeyId: string; n: number } | null>(null);
+  useEffect(() => {
+    if (!reveal) return;
+    const j = journeys.find((x) => x.id === reveal.journeyId);
+    if (!j) {
+      setReveal(null);
+      return;
+    }
+    if (reveal.n >= j.tasks.length) {
+      const t = setTimeout(() => setReveal(null), 0);
+      return () => clearTimeout(t);
+    }
+    const t = setTimeout(() => setReveal((r) => (r && r.journeyId === reveal.journeyId ? { ...r, n: r.n + 1 } : r)), 190);
+    return () => clearTimeout(t);
+  }, [reveal, journeys]);
+
   /* ---- journey creation ceremony ---- */
   const [building, setBuilding] = useState(false);
   const [buildStage, setBuildStage] = useState(0);
@@ -126,6 +143,7 @@ export default function Dashboard() {
         if (inc) {
           setJourneys((prev) => (prev.some((j) => j.id === inc.id) ? prev : [...prev, inc]));
           setActiveId(inc.id);
+          setReveal({ journeyId: inc.id, n: 1 });
           pendingJourney.current = null;
         }
         setBuilding(false);
@@ -289,7 +307,11 @@ export default function Dashboard() {
             <>
               <ProgressCard journey={activeJourney} progress={progress} done={doneCount} total={activeTasks.length} />
               {calendar.length > 0 && <CalendarStrip entries={calendar} />}
-              <JourneyGraph tasks={activeTasks} onSelect={setActiveTask} />
+              <JourneyGraph
+                tasks={activeTasks}
+                onSelect={setActiveTask}
+                revealCount={reveal && activeJourney && reveal.journeyId === activeJourney.id ? reveal.n : undefined}
+              />
             </>
           )}
         </section>
