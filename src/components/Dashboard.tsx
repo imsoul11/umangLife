@@ -102,33 +102,74 @@ export default function Dashboard() {
     [messages, profile, journeys, thinking],
   );
 
-  /** Complete or submit a task inside its journey, then recompute that graph. */
+  /** Drafts survive hopping from wizard to chat and back. */
+  const [drafts, setDrafts] = useState<Record<string, Record<string, { value: string; source?: string }>>>({});
+
+  /**
+   * Complete or submit a task, recompute the graph, then ACKNOWLEDGE it in the
+   * conversation so the user never has to re-ask "what now?".
+   */
   const completeTask = useCallback(
-    (journeyId: string, taskId: string, submitOnly: boolean) => {
-      let createdRef: string | undefined;
-      setJourneys((prev) =>
-        prev.map((j) => {
-          if (j.id !== journeyId) return j;
-          const target = j.tasks.find((t) => t.id === taskId);
-          if (!target) return j;
-          if (submitOnly && target.slaDays) {
-            createdRef = `${target.service.slice(0, 2)}-${Math.floor(10000 + Math.random() * 89999)}`;
-          }
-          const tasks = j.tasks.map((t) =>
-            t.id === taskId
-              ? submitOnly && t.slaDays
-                ? { ...t, status: "in_progress" as const, submittedAt: new Date().toISOString(), applicationRef: createdRef }
-                : { ...t, status: "done" as const, completedAt: new Date().toISOString() }
-              : t,
-          );
-          return { ...j, tasks: computeTaskStatuses({ ...j, tasks }, MOCK_DIGILOCKER_DOCS) };
-        }),
+    (journeyId: string, taskId: string, submitOnly: boolean, ref?: string) => {
+      const owner = journeys.find((j) => j.id === journeyId);
+      if (!owner) return;
+      const target = owner.tasks.find((t) => t.id === taskId);
+      if (!target) return;
+      const before = computeTaskStatuses(owner, MOCK_DIGILOCKER_DOCS);
+
+      const tasksRaw = owner.tasks.map((t) =>
+        t.id === taskId
+          ? submitOnly && t.slaDays
+            ? { ...t, status: "in_progress" as const, submittedAt: new Date().toISOString(), applicationRef: ref ?? t.applicationRef }
+            : { ...t, status: "done" as const, completedAt: new Date().toISOString() }
+          : t,
       );
+      const draft: Journey = { ...owner, tasks: tasksRaw };
+      const after = computeTaskStatuses(draft, MOCK_DIGILOCKER_DOCS);
+      setJourneys((prev) => prev.map((j) => (j.id === journeyId ? { ...draft, tasks: after } : j)));
       setActiveTask(null);
+      setDrafts((d) => ({ ...d, [taskId]: {} }));
+
+      // deterministic acknowledgment + chips for what just unlocked
+      const newlyReady = after.filter((a) => a.status === "ready" && before.find((b) => b.id === a.id)?.status !== "ready");
+      if (typeof document !== "undefined") {
+        const userLine: ChatMessage = {
+          role: "user",
+          content: submitOnly ? `I just submitted my application for “${target.title}”.` : `I just completed “${target.title}”.`,
+          ts: Date.now(),
+        };
+        const refNote = ref ? ` Reference number ${ref}.` : "";
+        const unlockNote = newlyReady.length
+          ? ` You can now start: ${newlyReady.map((t) => t.title).join(", ")}.`
+          : newlyReady.length === 0 && after.every((t) => t.status === "done")
+            ? " That was your final task — journey complete! 🎉"
+            : "";
+        const ack: ChatMessage = {
+          role: "assistant",
+          content: `${submitOnly ? "📨 Submitted" : "✓ Recorded"} — ${target.title}.${refNote}${unlockNote}`,
+          ts: Date.now() + 1,
+          actions: newlyReady.slice(0, 2).map((t) => ({
+            taskId: t.id,
+            kind: "open_form" as const,
+            label: t.title.length > 30 ? t.title.slice(0, 28) + "…" : t.title,
+          })),
+        };
+        setMessages((m) => [...m, userLine, ack]);
+      }
     },
-    [],
+    [journeys],
   );
 
+  /** Field-level "Ask AI" — hop to chat with a grounded question; draft is kept. */
+  const handleAskAi = useCallback(
+    (fieldLabel: string, taskTitle: string) => {
+      setActiveTask(null);
+      sendMessage(`I'm filling “${taskTitle}” but I'm stuck on the field “${fieldLabel}”. Where exactly do I find this information?`);
+    },
+    [sendMessage],
+  );
+
+  /** Chat chip → same execution paths as the graph UI. */
   const handleChatAction = useCallback(
     (a: ChatAction) => {
       const owner = journeys.find((j) => j.tasks.some((t) => t.id === a.taskId));
@@ -206,7 +247,7 @@ export default function Dashboard() {
               <ProgressCard journey={activeJourney} progress={progress} done={doneCount} total={activeTasks.length} />
               {calendar.length > 0 && <CalendarStrip entries={calendar} />}
               <JourneyGraph tasks={activeTasks} onSelect={setActiveTask} />
-              <a href="/benefits" className="block rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 hover:border-emerald-400 transition">
+              <a href="/benefits" className="anim-rise block rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 hover:border-emerald-400 transition">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="text-xl">✅</span>
@@ -228,7 +269,17 @@ export default function Dashboard() {
       </main>
 
       {activeTask && activeJourney && (
-        <TaskWizard task={activeTask} entities={activeJourney.entities} docs={MOCK_DIGILOCKER_DOCS} profile={profile} onClose={() => setActiveTask(null)} onComplete={(taskId, sub) => completeTask(activeJourney.id, taskId, sub)} />
+        <TaskWizard
+          task={activeTask}
+          entities={activeJourney.entities}
+          docs={MOCK_DIGILOCKER_DOCS}
+          profile={profile}
+          savedDraft={drafts[activeTask.id]}
+          onClose={() => setActiveTask(null)}
+          onComplete={(taskId, sub, ref) => completeTask(activeJourney.id, taskId, sub, ref)}
+          onDraftChange={(tid, vals) => setDrafts((d) => ({ ...d, [tid]: vals }))}
+          onAskAi={handleAskAi}
+        />
       )}
     </div>
   );
@@ -245,7 +296,7 @@ function WelcomeBackCard({
 }) {
   if (ready.length === 0 && actionNeeded.length === 0) return null;
   return (
-    <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border border-orange-200 p-4">
+    <div className="anim-rise bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border border-orange-200 p-4">
       <p className="text-sm font-semibold text-slate-800">
         👋 You have {ready.length + actionNeeded.length} thing{ready.length + actionNeeded.length !== 1 ? "s" : ""} to take care of.
       </p>
