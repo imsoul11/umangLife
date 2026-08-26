@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CalendarEntry, Journey, TaskInstance } from "@/lib/types";
 import { buildCalendar } from "@/lib/engine";
+import { buildDemoJourneys } from "@/data/seed";
 
-const STORAGE_KEY = "umanglife-session-v1";
+const STORAGE_KEY = "umanglife-session-v2";
 
 interface GrievanceState {
   entry: CalendarEntry;
@@ -89,9 +90,20 @@ export default function CalendarPage() {
   if (journeys.length === 0) {
     return (
       <div className="grid place-items-center min-h-[60vh] text-center">
-        <div>
+        <div className="space-y-4">
           <p className="text-4xl mb-3">📅</p>
           <p className="text-slate-600 font-medium">No active applications to track yet.</p>
+          <button
+            onClick={() => {
+              const seeded = buildDemoJourneys();
+              setJourneys(seeded);
+              localStorage.setItem(STORAGE_KEY, JSON.stringify({ journeys: seeded, messages: [] }));
+            }}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white text-sm font-semibold shadow-md hover:opacity-95 transition"
+          >
+            ✨ Load demo with live applications (one overdue)
+          </button>
+          <p className="text-xs text-slate-400">or </p>
           <a href="/" className="text-sm text-saffron font-medium hover:underline">← Start a life event journey</a>
         </div>
       </div>
@@ -116,7 +128,7 @@ export default function CalendarPage() {
       <main className="max-w-5xl mx-auto p-4 lg:p-6">
         {urgentCount > 0 && (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 anim-rise">
-            🚨 <b>{urgentCount} application{urgentCount !== 1 ? "s" : ""}</b> past{urgentCount !== 1 ? "" : ""} the expected decision date — consider escalating below.
+            🚨 <b>{urgentCount} application{urgentCount !== 1 ? "s" : ""}</b> past the expected decision date — consider escalating below.
           </div>
         )}
         {entries.length === 0 ? (
