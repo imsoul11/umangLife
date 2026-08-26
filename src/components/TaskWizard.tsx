@@ -222,14 +222,14 @@ export default function TaskWizard({
                 return (
                   <div key={f.id} className="anim-rise" style={{ animationDelay: `${idx * 45}ms` }}>
                     <label className="flex items-center justify-between gap-2 text-xs font-medium text-slate-600 mb-1">
-                      <span>{f.label}{f.required !== false && <span className="text-red-400"> *</span>}</span>
+                      <span className="text-slate-700">{f.label}{f.required !== false && <span className="text-red-500"> *</span>}</span>
                       {chip && <span className={`px-1.5 py-0.5 rounded text-[10px] ${chip.cls}`}>{chip.label}</span>}
                     </label>
                     {f.type === "select" ? (
                       <select
                         value={entry?.value ?? ""}
                         onChange={(e) => update(f.id, e.target.value)}
-                        className={`w-full text-sm px-3 py-2 rounded-lg border focus:outline-none ${
+                        className={`w-full text-sm text-slate-900 bg-white placeholder:text-slate-500 px-3 py-2 rounded-lg border focus:outline-none ${
                           isPrefilled ? "border-l-4 border-l-emerald-400 border-slate-200 bg-emerald-50/30" : needsInput ? "border-dashed border-amber-300 bg-amber-50/30" : "border-slate-200"
                         } focus:border-orange-500`}
                       >
@@ -241,7 +241,7 @@ export default function TaskWizard({
                         value={entry?.value ?? ""}
                         placeholder={needsInput && f.required !== false ? "Required — type here" : "Optional"}
                         onChange={(e) => update(f.id, e.target.value)}
-                        className={`w-full text-sm px-3 py-2 rounded-lg border focus:outline-none ${
+                        className={`w-full text-sm text-slate-900 bg-white placeholder:text-slate-500 px-3 py-2 rounded-lg border focus:outline-none ${
                           isPrefilled ? "border-l-4 border-l-emerald-400 border-slate-200 bg-emerald-50/30" : needsInput && f.required !== false ? "border-dashed border-amber-300 bg-amber-50/30" : "border-slate-200"
                         } focus:border-orange-500`}
                       />

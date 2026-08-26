@@ -42,12 +42,12 @@ export default function ChatPanel({
             </span>
           )}
         </div>
-        <p className="text-[11px] text-slate-400">One advisor · knows all your journeys</p>
+        <p className="text-[11px] text-slate-500">One advisor · knows all your journeys</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px] lg:min-h-0">
         {messages.length === 0 && (
-          <div className="text-center text-xs text-slate-400 pt-10 space-y-2">
+          <div className="text-center text-sm text-slate-600 pt-10 space-y-2">
             <p className="text-3xl">💬</p>
             <p>Try: &ldquo;I bought a second-hand car&rdquo;</p>
           </div>
@@ -80,7 +80,7 @@ export default function ChatPanel({
         ))}
         {thinking && (
           <div className="flex justify-start">
-            <div className="bg-slate-100 text-slate-500 px-4 py-2.5 rounded-2xl rounded-bl-md text-sm">
+            <div className="bg-slate-100 border border-slate-300 text-slate-700 px-4 py-2.5 rounded-2xl rounded-bl-md text-sm">
               <span className="animate-pulse">thinking…</span>
             </div>
           </div>
@@ -94,7 +94,7 @@ export default function ChatPanel({
             <button
               key={s}
               onClick={() => onSend(s)}
-              className="text-[11px] px-2.5 py-1.5 rounded-full bg-slate-100 text-slate-600 hover:bg-orange-50 hover:text-orange-700 transition"
+              className="text-[11px] font-medium px-2.5 py-1.5 rounded-full bg-slate-100 text-slate-800 hover:bg-orange-50 hover:text-orange-700 transition"
             >
               {s}
             </button>
@@ -108,7 +108,7 @@ export default function ChatPanel({
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder="What happened in your life?"
-          className="flex-1 text-sm px-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+          className="flex-1 text-sm text-slate-900 bg-white placeholder:text-slate-500 px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
           disabled={thinking}
         />
         <button

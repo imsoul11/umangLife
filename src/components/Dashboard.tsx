@@ -318,7 +318,7 @@ function WelcomeBackCard({
           return (
             <li key={t.id + t.title} className="flex items-center justify-between gap-3 text-xs bg-white/70 rounded-lg px-3 py-2">
               <span className="truncate text-slate-700">{icon} {t.title}{u ? ` — ${u.chip}` : ""}</span>
-              <span className="shrink-0 text-slate-400">{t.applicationRef ? `ref ${t.applicationRef}` : t.status === "ready" ? "ready now" : "needs document"}</span>
+              <span className="shrink-0 text-slate-600">{t.applicationRef ? `ref ${t.applicationRef}` : t.status === "ready" ? "ready now" : "needs document"}</span>
             </li>
           );
         })}
