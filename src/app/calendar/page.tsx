@@ -6,6 +6,12 @@ import { buildCalendar } from "@/lib/engine";
 import { buildDemoJourneys } from "@/data/seed";
 
 const STORAGE_KEY = "umanglife-session-v2";
+const GRIEVANCE_KEY = "umanglife-grievances-v1";
+
+interface EscalatedRecord {
+  grievanceId: string;
+  at: string;
+}
 
 interface GrievanceState {
   entry: CalendarEntry;
@@ -18,6 +24,10 @@ interface GrievanceState {
 }
 
 type View = "month" | "timeline";
+
+function entryKey(e: { journey: Journey; id: string }): string {
+  return `${e.journey.id}:${e.id}`;
+}
 
 function toDayKey(iso: string): string {
   const d = new Date(iso);
@@ -49,6 +59,8 @@ export default function CalendarPage() {
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [grievance, setGrievance] = useState<GrievanceState | null>(null);
   const [ready, setReady] = useState(false);
+  /** entryId -> filed grievance; once set, the entry can only be viewed, never re-filed */
+  const [escalated, setEscalated] = useState<Record<string, EscalatedRecord>>({});
   const [view, setView] = useState<View>("month");
   const today = new Date();
   const [cursor, setCursor] = useState({ y: today.getFullYear(), m: today.getMonth() });
@@ -65,8 +77,21 @@ export default function CalendarPage() {
         }
       }
     } catch {}
+    try {
+      const raw = localStorage.getItem(GRIEVANCE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as Record<string, EscalatedRecord>;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read
+        setEscalated(saved);
+      }
+    } catch {}
     setReady(true);
   }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    localStorage.setItem(GRIEVANCE_KEY, JSON.stringify(escalated));
+  }, [ready, escalated]);
 
   const entries = useMemo(() => {
     const all: (CalendarEntry & { journey: Journey })[] = [];
@@ -90,7 +115,20 @@ export default function CalendarPage() {
   const dayEntries = byDay.get(selectedKey) ?? [];
   const urgentCount = entries.filter((e) => e.severity === "urgent").length;
 
-  async function draftGrievance(entry: CalendarEntry) {
+  async function draftGrievance(entry: CalendarEntry, journey: Journey) {
+    const existing = escalated[entryKey({ journey, id: entry.id })];
+    if (existing) {
+      // already filed — open read-only with the stored ID
+      setGrievance({
+        entry,
+        subject: "",
+        body: "",
+        drafting: false,
+        filing: false,
+        grievanceId: existing.grievanceId,
+      });
+      return;
+    }
     setGrievance({ entry, subject: "", body: "", drafting: true, filing: false });
     const task = allTasksOf(entry, journeys);
     const owner = journeys.find((x) => x.tasks.some((t) => t.id === entry.relatedTaskId && t.status === "in_progress"));
@@ -116,6 +154,12 @@ export default function CalendarPage() {
     setGrievance({ ...grievance, filing: true });
     setTimeout(() => {
       const gid = `GRV-${Math.floor(100000 + Math.random() * 899999)}`;
+      const e = grievance.entry;
+      const owner = journeys.find((x) => x.tasks.some((t) => t.id === e.relatedTaskId));
+      if (owner) {
+        const key = entryKey({ journey: owner, id: e.id });
+        setEscalated((prev) => ({ ...prev, [key]: { grievanceId: gid, at: new Date().toISOString() } }));
+      }
       setGrievance((g) => (g ? { ...g, filing: false, grievanceId: gid } : g));
     }, 1400);
   }
@@ -251,7 +295,13 @@ export default function CalendarPage() {
               ) : (
                 <div className="space-y-2">
                   {dayEntries.map((e, i) => (
-                    <EntryRow key={e.id + i} e={e} index={i} onEscalate={() => draftGrievance(e)} />
+                    <EntryRow
+                      key={e.id + i}
+                      e={e}
+                      index={i}
+                      escalatedInfo={escalated[entryKey(e)]}
+                      onEscalate={() => draftGrievance(e, e.journey)}
+                    />
                   ))}
                 </div>
               )}
@@ -261,7 +311,13 @@ export default function CalendarPage() {
           /* ---- timeline ---- */
           <div className="space-y-2">
             {entries.map((e, i) => (
-              <EntryRow key={e.id + i} e={e} index={i} onEscalate={() => draftGrievance(e)} />
+              <EntryRow
+                key={e.id + i}
+                e={e}
+                index={i}
+                escalatedInfo={escalated[entryKey(e)]}
+                onEscalate={() => draftGrievance(e, e.journey)}
+              />
             ))}
           </div>
         )}
@@ -274,7 +330,17 @@ export default function CalendarPage() {
   );
 }
 
-function EntryRow({ e, index, onEscalate }: { e: CalendarEntry & { journey: Journey }; index: number; onEscalate: () => void }) {
+function EntryRow({
+  e,
+  index,
+  escalatedInfo,
+  onEscalate,
+}: {
+  e: CalendarEntry & { journey: Journey };
+  index: number;
+  escalatedInfo?: EscalatedRecord;
+  onEscalate: () => void;
+}) {
   const dLeft = daysTo(e.date);
   const overdue = dLeft < 0;
   return (
@@ -298,10 +364,14 @@ function EntryRow({ e, index, onEscalate }: { e: CalendarEntry & { journey: Jour
       <button
         onClick={onEscalate}
         className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-semibold border transition ${
-          overdue ? "bg-red-600 text-white border-red-600 hover:bg-red-700" : "border-saffron text-saffron hover:bg-saffron hover:text-white"
+          escalatedInfo
+            ? "bg-emerald-600 text-white border-emerald-600 cursor-pointer"
+            : overdue
+              ? "bg-red-600 text-white border-red-600 hover:bg-red-700"
+              : "border-saffron text-saffron hover:bg-saffron hover:text-white"
         }`}
       >
-        ⚖️ Escalate
+        {escalatedInfo ? `✓ Filed · ${escalatedInfo.grievanceId}` : "⚖️ Escalate"}
       </button>
     </div>
   );
