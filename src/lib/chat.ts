@@ -11,7 +11,7 @@ import type OpenAI from "openai";
 import { getAIClient } from "@/lib/ai";
 import { buildSystemPrompt } from "@/lib/prompts";
 import { findKbTopic } from "@/data/kb";
-import { JOURNEY_TEMPLATES } from "@/data/journeys/job-change";
+import { JOURNEY_TEMPLATES } from "@/data/journeys";
 import { MOCK_DIGILOCKER_DOCS } from "@/data/mocks";
 import { computeTaskStatuses, materializeTaskDefs } from "@/lib/engine";
 

@@ -205,7 +205,3 @@ export const JOB_CHANGE_TASKS: TaskDef[] = [
     ],
   },
 ];
-
-export const JOURNEY_TEMPLATES: Record<string, TaskDef[]> = {
-  JOB_CHANGE: JOB_CHANGE_TASKS,
-};

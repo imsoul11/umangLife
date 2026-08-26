@@ -222,6 +222,58 @@ Free of charge. Processing commonly completes within about a month outside elect
 ## Tip
 Update Aadhaar address FIRST — it doubles as the residence proof for this application.`,
   },
+  {
+    slug: "vehicle-rc-ownership-transfer",
+    title: "Transferring RC ownership of a second-hand vehicle",
+    department: "MoRTH / Parivahan Sewa",
+    lastUpdated: "2026-04-05",
+    lifeEvents: ["VEHICLE_PURCHASE", "JOB_CHANGE"],
+    keywords: ["rc", "transfer of ownership", "second-hand", "form 29", "form 30", "parivahan", "rto"],
+    content: `# RC ownership transfer for a second-hand vehicle
+
+## Legal clock
+CMV Rule 56: the buyer must apply to the RTO within **30 days** of purchase (45 days if moving registration between states). Late applications attract fees and leave liability ambiguity.
+
+## Documents
+- Original RC + Forms 29 & 30 signed by seller AND buyer (physically or e-sign via Parivahan)
+- Valid insurance certificate (in buyer's name)
+- Valid PUC certificate
+- Address proof of buyer
+- Bank NOC / hypothecation termination if the car was financed
+
+## Before you go
+1. Clear all pending e-challans on the vehicle (Parivahan → Check Challan).
+2. Transfer insurance FIRST — many RTOs check it at the counter.
+3. Keep a copy of the sale letter.
+
+## Process
+Parivahan → Vehicle Related Services → enter registration & state → Apply for Transfer of Ownership → upload documents, pay fee, book slot if physical inspection needed.
+
+## Timeline
+Typically 15–30 days end-to-end; new RC arrives by post with your name.`,
+  },
+  {
+    slug: "vehicle-insurance-transfer",
+    title: "Transferring vehicle insurance after buying second-hand",
+    department: "IRDAI / Insurance carriers",
+    lastUpdated: "2026-03-20",
+    lifeEvents: ["VEHICLE_PURCHASE"],
+    keywords: ["insurance", "policy transfer", "claim", "irdai", "ncb", "14 days"],
+    content: `# Insurance transfer on a second-hand purchase
+
+## The 14-day rule
+On transfer of ownership, existing policy benefits (including No Claim Bonus exceptions) pass only if the buyer applies within **14 days** of sale date. After that window insurers may refuse claim settlement.
+
+## How
+1. Notify the insurer within 14 days with the sale letter + Form 29/30 copy.
+2. Pay the nominal transfer fee; NCB stays with the SELLER — expect premium adjustment.
+3. Receive endorsement certificate in your name before visiting the RTO.
+
+## Alternative
+Buy a fresh comprehensive policy in your name instead — often cleaner if the old policy is near expiry; third-party cover is mandatory regardless.
+
+Note: driving uninsured (even briefly between ownership change) voids third-party protection — do this early.`,
+  },
 ];
 
 export function findKbTopic(slug: string): KbTopic | undefined {
