@@ -120,7 +120,7 @@ export default function Dashboard() {
    * conversation so the user never has to re-ask "what now?".
    */
   const completeTask = useCallback(
-    (journeyId: string, taskId: string, submitOnly: boolean, ref?: string) => {
+    (journeyId: string, taskId: string, submitOnly: boolean, ref?: string, snapshot?: Record<string, string>) => {
       const owner = journeys.find((j) => j.id === journeyId);
       if (!owner) return;
       const target = owner.tasks.find((t) => t.id === taskId);
@@ -130,14 +130,13 @@ export default function Dashboard() {
       const tasksRaw = owner.tasks.map((t) =>
         t.id === taskId
           ? submitOnly && t.slaDays
-            ? { ...t, status: "in_progress" as const, submittedAt: new Date().toISOString(), applicationRef: ref ?? t.applicationRef }
-            : { ...t, status: "done" as const, completedAt: new Date().toISOString() }
+            ? { ...t, status: "in_progress" as const, submittedAt: new Date().toISOString(), applicationRef: ref ?? t.applicationRef, submittedValues: snapshot ?? t.submittedValues }
+            : { ...t, status: "done" as const, completedAt: new Date().toISOString(), submittedValues: snapshot ?? t.submittedValues }
           : t,
       );
       const draft: Journey = { ...owner, tasks: tasksRaw };
       const after = computeTaskStatuses(draft, MOCK_DIGILOCKER_DOCS);
       setJourneys((prev) => prev.map((j) => (j.id === journeyId ? { ...draft, tasks: after } : j)));
-      setActiveTask(null);
       setDrafts((d) => ({ ...d, [taskId]: {} }));
 
       // deterministic acknowledgment + chips for what just unlocked
@@ -288,7 +287,7 @@ export default function Dashboard() {
           skipFetch={fetchedForms.has(activeTask.id)}
           onFetched={() => markFetched(activeTask.id)}
           onClose={() => setActiveTask(null)}
-          onComplete={(taskId, sub, ref) => completeTask(activeJourney.id, taskId, sub, ref)}
+          onComplete={(taskId, sub, ref, snapshot) => completeTask(activeJourney.id, taskId, sub, ref, snapshot)}
           onDraftChange={(tid, vals) => setDrafts((d) => ({ ...d, [tid]: vals }))}
           onAskAi={handleAskAi}
         />

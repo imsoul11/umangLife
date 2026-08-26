@@ -94,6 +94,8 @@ export interface TaskInstance extends TaskDef {
   submittedAt?: string;
   /** e.g. "PF-12345" — stands in for applications.external_reference */
   applicationRef?: string;
+  /** frozen copy of what the citizen filed — renders the read-only receipt */
+  submittedValues?: Record<string, string>;
 }
 
 /** Extracted facts from the user's chat utterance. */

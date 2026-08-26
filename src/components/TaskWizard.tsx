@@ -57,14 +57,15 @@ export default function TaskWizard({
   /** form already fetched this session — skip the ceremony */
   skipFetch?: boolean;
   onClose: () => void;
-  onComplete: (taskId: string, submitOnly: boolean, ref?: string) => void;
+  onComplete: (taskId: string, submitOnly: boolean, ref?: string, snapshot?: Record<string, string>) => void;
   onDraftChange?: (taskId: string, values: Values) => void;
   onAskAi?: (fieldLabel: string, taskTitle: string) => void;
   onFetched?: () => void;
 }) {
   const ctx = useMemo(() => ({ docs, profile, entities }), [docs, profile, entities]);
 
-  const [fetchStage, setFetchStage] = useState(skipFetch ? FETCH_STAGES.length : 0);
+  const readOnly = task.status === "in_progress" || task.status === "done";
+  const [fetchStage, setFetchStage] = useState(skipFetch || readOnly ? FETCH_STAGES.length : 0);
   useEffect(() => {
     if (fetchStage >= FETCH_STAGES.length) return;
     const next = fetchStage + 1;
@@ -124,7 +125,12 @@ export default function TaskWizard({
         }, 620);
       } else {
         setTimeout(() => {
-          onComplete(task.id, Boolean(task.slaDays), ref);
+          onComplete(
+            task.id,
+            Boolean(task.slaDays),
+            ref,
+            Object.fromEntries(fields.map((f) => [f.id, values[f.id]?.value ?? ""])),
+          );
           setStep(2);
           setSubmitStage(null);
         }, 700);
@@ -147,7 +153,7 @@ export default function TaskWizard({
             </div>
             <StatusBadge status={justSubmitted ? "done" : task.status} />
           </div>
-          {!justSubmitted && (
+          {!justSubmitted && !readOnly && (
             <div className="mt-3 flex items-center gap-2">
               {STEPS.map((s, i) => (
                 <div key={s} className="flex items-center gap-2">
@@ -161,7 +167,35 @@ export default function TaskWizard({
         </div>
 
         {/* ---------- FETCH SEQUENCE ---------- */}
-        {!formReady ? (
+        {readOnly ? (
+          <div className="p-6 space-y-4 anim-rise">
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 leading-relaxed">
+              📄 Application <b className="font-mono">{task.applicationRef}</b>
+              {task.submittedAt && (
+                <> · submitted {new Date(task.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</>
+              )}
+              {task.slaDays && task.submittedAt &&
+                (() => {
+                  const d = new Date(task.submittedAt);
+                  d.setDate(d.getDate() + task.slaDays);
+                  return <> · decision expected by <b>{d.toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</b></>;
+                })()}
+            </div>
+            <div className="rounded-xl border border-slate-200 divide-y divide-slate-100">
+              {fields.map((f) => (
+                <div key={f.id} className="flex justify-between gap-4 px-3.5 py-2.5 text-sm">
+                  <span className="text-slate-500">{f.label}</span>
+                  <span className="font-medium text-slate-800 text-right truncate">{task.submittedValues?.[f.id] || "—"}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-slate-600">
+              {task.status === "done"
+                ? "✓ This step is complete."
+                : "⏳ Under department processing — we’ll flag it here and on your calendar if it exceeds the expected timeline."}
+            </p>
+          </div>
+        ) : !formReady ? (
           <div className="p-8 space-y-4 min-h-[280px]">
             {FETCH_STAGES.map((st, i) => (
               <div key={st.label} className="flex items-center gap-3 text-sm anim-rise" style={{ animationDelay: `${i * 120}ms` }}>
@@ -318,7 +352,7 @@ export default function TaskWizard({
         {/* footer actions */}
         {submitStage === null && (
           <div className="px-6 py-4 border-t border-slate-100 flex items-center gap-2">
-            {!justSubmitted && formReady && (
+            {!justSubmitted && !readOnly && formReady && (
               <>
                 {step === 0 && (
                   <button
