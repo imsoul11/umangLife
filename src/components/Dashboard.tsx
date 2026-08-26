@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CalendarEntry, ChatAction, ChatMessage, CitizenProfile, Journey, TaskInstance } from "@/lib/types";
 import { MOCK_DIGILOCKER_DOCS, MOCK_PROFILE } from "@/data/mocks";
-import { SCHEMES } from "@/data/schemes";
-import { buildCalendar, byUrgencyDesc, computeTaskStatuses, computeUrgency, matchSchemes } from "@/lib/engine";
+import { buildCalendar, byUrgencyDesc, computeTaskStatuses, computeUrgency } from "@/lib/engine";
 import TaskWizard from "@/components/TaskWizard";
+import JourneyBuilder, { JOURNEY_BUILD_STAGES, JOURNEY_BUILD_STEP_MS } from "@/components/JourneyBuilder";
 import JourneyGraph from "@/components/JourneyGraph";
 import ChatPanel from "@/components/ChatPanel";
 
@@ -60,12 +60,10 @@ export default function Dashboard() {
     [journeys],
   );
   const activeTasks: TaskInstance[] = activeJourney ? computeTaskStatuses(activeJourney, MOCK_DIGILOCKER_DOCS) : [];
-  const matches = useMemo(() => matchSchemes(profile, SCHEMES), [profile]);
   const calendar: CalendarEntry[] = useMemo(
     () => journeys.flatMap((j) => buildCalendar(j)),
     [journeys],
   );
-  const eligible = matches.filter((m) => m.eligible);
   const doneCount = activeTasks.filter((t) => t.status === "done").length;
   const progress = activeTasks.length ? Math.round((doneCount / activeTasks.length) * 100) : 0;
 
@@ -92,8 +90,11 @@ export default function Dashboard() {
         setMessages((m) => [...m, reply]);
         if (data.detection?.journey) {
           const incoming: Journey = data.detection.journey;
-          setJourneys((prev) => prev.some((j) => j.id === incoming.id) ? prev : [...prev, incoming]);
-          setActiveId(incoming.id);
+          if (!journeys.some((j) => j.id === incoming.id)) {
+            pendingJourney.current = incoming;
+            setBuildStage(0);
+            setBuilding(true);
+          }
         }
       } catch {
         setMessages((m) => [
@@ -111,6 +112,29 @@ export default function Dashboard() {
   const [drafts, setDrafts] = useState<Record<string, Record<string, { value: string; source?: string }>>>({});
   /** forms already fetched this session — replay no ceremony */
   const [fetchedForms, setFetchedForms] = useState<Set<string>>(() => new Set());
+
+  /* ---- journey creation ceremony ---- */
+  const [building, setBuilding] = useState(false);
+  const [buildStage, setBuildStage] = useState(0);
+  const pendingJourney = useRef<Journey | null>(null);
+  useEffect(() => {
+    if (!building) return;
+    if (buildStage >= JOURNEY_BUILD_STAGES) {
+      // defer so we never setState synchronously inside the effect body
+      const t = setTimeout(() => {
+        const inc = pendingJourney.current;
+        if (inc) {
+          setJourneys((prev) => (prev.some((j) => j.id === inc.id) ? prev : [...prev, inc]));
+          setActiveId(inc.id);
+          pendingJourney.current = null;
+        }
+        setBuilding(false);
+      }, 0);
+      return () => clearTimeout(t);
+    }
+    const t = setTimeout(() => setBuildStage((st) => st + 1), JOURNEY_BUILD_STEP_MS);
+    return () => clearTimeout(t);
+  }, [building, buildStage]);
   const markFetched = useCallback((id: string) => {
     setFetchedForms((prev) => {
       if (prev.has(id)) return prev;
@@ -214,6 +238,9 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex items-center gap-2 text-sm">
+          <a href="/benefits" className="mr-1 font-medium text-slate-600 hover:text-orange-600 border border-slate-200 rounded-full px-3.5 py-1.5 hover:border-orange-400 transition">
+            💰 My Benefits
+          </a>
           <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 grid place-items-center font-semibold">
             {profile.name[0]}
           </span>
@@ -233,11 +260,11 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto p-4 lg:p-6 grid lg:grid-cols-[1fr_400px] gap-4 lg:gap-6">
         <section className="space-y-4 min-w-0">
           {/* Welcome back — reconstructed entirely from persisted state */}
-          {journeys.length > 0 && (
+          {!building && journeys.length > 0 && (
             <WelcomeBackCard ready={readyNow} actionNeeded={needsAction} />
           )}
 
-          {journeys.length > 1 && (
+          {!building && journeys.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
               {journeys.map((j) => {
                 const st = computeTaskStatuses(j, MOCK_DIGILOCKER_DOCS);
@@ -254,25 +281,15 @@ export default function Dashboard() {
             </div>
           )}
 
-          {!activeJourney ? (
+          {building ? (
+            <JourneyBuilder stage={buildStage} />
+          ) : !activeJourney ? (
             <EmptyState onPrompt={sendMessage} />
           ) : (
             <>
               <ProgressCard journey={activeJourney} progress={progress} done={doneCount} total={activeTasks.length} />
               {calendar.length > 0 && <CalendarStrip entries={calendar} />}
               <JourneyGraph tasks={activeTasks} onSelect={setActiveTask} />
-              <a href="/benefits" className="anim-rise block rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 hover:border-emerald-400 transition">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-xl">✅</span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-800">{eligible.length} government benefits match your profile</p>
-                      <p className="text-xs text-slate-500 truncate">Sukanya Samriddhi · Gruha Jyothi · +{Math.max(eligible.length - 2, 0)} more — see why you qualify</p>
-                    </div>
-                  </div>
-                  <span className="shrink-0 text-xs font-medium text-emerald-700">View all →</span>
-                </div>
-              </a>
             </>
           )}
         </section>
