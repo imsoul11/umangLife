@@ -11,7 +11,6 @@ const STEPS = ["Form", "Verify", "Submit"];
 
 function sourceChip(source?: string): { label: string; cls: string } | null {
   if (!source) return null;
-  if (source === "gemini") return { label: "✨ matched by Gemini", cls: "bg-purple-100 text-purple-700" };
   if (source.startsWith("entity:")) return { label: "from your chat", cls: "bg-sky-100 text-sky-700" };
   if (source.startsWith("profile:")) return { label: "your profile", cls: "bg-sky-100 text-sky-700" };
   const dept = { aadhaar: "DigiLocker·UIDAI", pan: "DigiLocker·ITD", bank_passbook: "DigiLocker·Bank", dl: "DigiLocker·RTO", vehicle_rc: "DigiLocker·RTO" }[source.split(".")[0]];
@@ -49,34 +48,12 @@ export default function TaskWizard({
 
   const [step, setStep] = useState(0);
   const [values, setValues] = useState<Values>(initial);
-  const [autofilling, setAutofilling] = useState(false);
   const [declared, setDeclared] = useState<Record<string, boolean>>({});
   const [generatedRef, setGeneratedRef] = useState<string>("");
 
   const fields = task.formFields ?? [];
   const filledCount = fields.filter((f) => values[f.id]?.value || f.type === "select").length;
   const missingRequired = fields.filter((f) => f.required !== false && !values[f.id]?.value);
-
-  async function autofill() {
-    setAutofilling(true);
-    try {
-      const res = await fetch("/api/autofill", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskTitle: task.title, fields, context: ctx }),
-      });
-      const data = await res.json();
-      setValues((prev) => {
-        const next = { ...prev };
-        for (const [id, v] of Object.entries(data.values ?? {}) as [string, { value: string; source: string }][]) {
-          if (!next[id]) next[id] = { value: v.value, source: v.source };
-        }
-        return next;
-      });
-    } finally {
-      setAutofilling(false);
-    }
-  }
 
   function submit() {
     if (task.slaDays) {
@@ -134,7 +111,7 @@ export default function TaskWizard({
           ) : step === 0 ? (
             <>
               <p className="text-sm text-slate-500">
-                This is what you&apos;d fill on the department portal. We prefill what you&apos;ve authorized — check each value before submitting.
+                This is what you&apos;d fill on the department portal — prefilled instantly from your authorized documents &amp; journey info. Fields not on file are marked for manual entry.
               </p>
               <div className="space-y-3">
                 {fields.map((f) => {
@@ -162,6 +139,9 @@ export default function TaskWizard({
                           onChange={(e) => setValues((v) => ({ ...v, [f.id]: { value: e.target.value, source: "you" } }))}
                           className="w-full text-sm px-3 py-2 rounded-lg border border-slate-200 focus:border-orange-500 focus:outline-none"
                         />
+                      )}
+                      {f.required !== false && !entry?.value && f.type !== "select" && (
+                        <p className="mt-1 text-[11px] text-slate-400">✍️ Not on file — please enter manually</p>
                       )}
                     </div>
                   );
@@ -203,16 +183,12 @@ export default function TaskWizard({
           {!justSubmitted && (
             <>
               {step === 0 && (
-                <>
-                  <button onClick={autofill} disabled={autofilling || missingRequired.length === 0}
-                    className="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-sm font-semibold transition">
-                    {autofilling ? "✨ Matching your data…" : `✨ Autofill remaining (${missingRequired.length}) with Gemini`}
-                  </button>
-                  <button onClick={() => setStep(1)} disabled={missingRequired.length > 0}
-                    className="flex-1 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-sm font-semibold transition">
-                    Review & verify ({filledCount}/{fields.length})
-                  </button>
-                </>
+                <button onClick={() => setStep(1)} disabled={missingRequired.length > 0}
+                  className="flex-1 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-sm font-semibold transition">
+                  {missingRequired.length > 0
+                    ? `Fill ${missingRequired.length} remaining field${missingRequired.length !== 1 ? "s" : ""} to continue`
+                    : `Review & verify (${filledCount}/${fields.length})`}
+                </button>
               )}
               {step === 1 && (
                 <>
