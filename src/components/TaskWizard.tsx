@@ -103,11 +103,11 @@ export default function TaskWizard({
   const missingRequired = fields.filter((f) => f.required !== false && !values[f.id]?.value);
 
   function update(id: string, value: string) {
-    setValues((v) => {
-      const next = { ...v, [id]: { value, source: "you" } };
-      onDraftChange?.(task.id, next);
-      return next;
-    });
+    // never call another component's setState inside an updater — React may
+    // run updaters during render; do the draft write in the event handler instead
+    const next = { ...values, [id]: { value, source: "you" } };
+    setValues(next);
+    onDraftChange?.(task.id, next);
   }
 
   function submit() {
