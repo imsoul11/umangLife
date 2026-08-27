@@ -167,7 +167,7 @@ export default function CalendarPage() {
   if (!ready) return null;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen relative z-[1]">
       <header className="sticky top-0 z-40 border-b border-indigo-ink/10 bg-white/70 backdrop-blur-lg px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white grid place-items-center font-bold shadow-md">📅</div>

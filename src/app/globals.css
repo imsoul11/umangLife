@@ -96,7 +96,7 @@ body {
 .aurora {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
   background:
     radial-gradient(42rem 32rem at 12% -5%, rgba(255, 122, 26, 0.06), transparent 62%),
