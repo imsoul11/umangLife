@@ -221,7 +221,7 @@ export default function CalendarPage() {
               onClick={() => {
                 const seeded = buildDemoJourneys();
                 setJourneys(seeded);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify({ journeys: seeded, messages: [] }));
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({ journeys: seeded, messages: [], activeId: seeded[0]?.id }));
               }}
               className="px-4 py-2.5 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white text-sm font-semibold shadow-md hover:opacity-95 transition"
             >

@@ -33,12 +33,14 @@ export default function Dashboard() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const saved = JSON.parse(raw) as { journeys?: Journey[]; messages?: ChatMessage[] };
+        const saved = JSON.parse(raw) as { journeys?: Journey[]; messages?: ChatMessage[]; activeId?: string };
         if (saved.journeys?.length) {
           // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from localStorage
           setJourneys(saved.journeys);
+          // restore the tab the user was on — never silently jump to journeys[0]
+          const valid = saved.activeId && saved.journeys.some((j) => j.id === saved.activeId) ? saved.activeId : saved.journeys[0].id;
           // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from localStorage
-          setActiveId(saved.journeys[0].id);
+          setActiveId(valid);
         }
         // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from localStorage
         if (saved.messages) setMessages(saved.messages);
@@ -51,8 +53,8 @@ export default function Dashboard() {
   }, []);
   useEffect(() => {
     if (!restored) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ journeys, messages }));
-  }, [restored, journeys, messages]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ journeys, messages, activeId }));
+  }, [restored, journeys, messages, activeId]);
 
   const activeJourney = journeys.find((j) => j.id === activeId) ?? null;
   const allTasks: TaskInstance[] = useMemo(
