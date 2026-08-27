@@ -86,3 +86,35 @@ body {
 
 @keyframes driveline { to { stroke-dashoffset: -60; } }
 .drive-line { stroke-dasharray: 6 6; animation: driveline 1.2s linear infinite; }
+
+/* ---- atmospheric base: slow aurora + floating glyphs ---- */
+@keyframes driftA {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(3%, -2%, 0) scale(1.07); }
+  100% { transform: translate3d(-2%, 3%, 0) scale(1); }
+}
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(42rem 32rem at 12% -5%, rgba(255, 122, 26, 0.06), transparent 62%),
+    radial-gradient(48rem 36rem at 88% 8%, rgba(26, 20, 64, 0.05), transparent 60%),
+    radial-gradient(38rem 32rem at 55% 105%, rgba(11, 143, 92, 0.04), transparent 62%);
+  animation: driftA 34s ease-in-out infinite alternate;
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50%      { transform: translateY(-14px) rotate(3deg); }
+}
+.floaty {
+  animation: floaty 7s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.05; }
+  50%      { opacity: 0.10; }
+}
+.breathe { animation: breathe 6s ease-in-out infinite; }
