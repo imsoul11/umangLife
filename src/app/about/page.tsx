@@ -42,11 +42,12 @@ export default function AboutPage() {
           <h2 className="font-display text-lg font-semibold text-indigo-ink">The complete citizen journey</h2>
           <ol className="mt-3 space-y-2 text-sm text-slate-600">
             {[
-              "You describe a life event in plain words (“I bought a second-hand car yesterday”).",
+              "You describe a life event in plain words (“I bought a second-hand car yesterday”). Multiple events live side-by-side as tabs — a job change and a car purchase can both be in flight.",
               "The assistant detects the event and builds a task graph — in dependency order, with parallel lanes, and only tasks relevant to YOU (vehicle work hidden if you don’t own a vehicle).",
-              "Every task carries an official application form, prefilled instantly from your authorized documents (name, DOB, PAN, bank, RC…). Missing fields are visibly marked for manual entry.",
-              "You verify, consent, and submit — receiving a reference number. SLA deadlines land on the Government Calendar.",
-              "If an application drifts past its expected decision date, one click drafts a fully-contextual grievance (references, department, dates) — ready to file, nothing re-typed.",
+              "The chat is not a FAQ bot. Ask “what should I do next?” and you get actionable buttons under the reply — tap one to open that exact form without hunting for it.",
+              "Every task carries an official application form, prefilled instantly from your authorized documents (name, DOB, PAN, bank, RC…). If a field isn’t on file — like an insurance policy number — tap “Ask AI where to find it”, hop into the chat, and the answer comes back grounded; your draft is kept while you’re away.",
+              "You verify, consent, and submit — receiving a reference number. The filed slip is saved back to your DigiLocker, and the SLA deadline lands on your Government Calendar alongside every other pending application.",
+              "If an application drifts past its expected decision date, one click drafts a fully-contextual grievance (references, department, dates) — ready to file, nothing re-typed. Benefit matches and a full calendar review are one header-click away.",
             ].map((s, i) => (
               <li key={i} className="flex gap-3">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-saffron/15 text-saffron inline-grid place-items-center text-[11px] font-bold">{i + 1}</span>
