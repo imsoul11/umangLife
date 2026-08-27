@@ -20,6 +20,7 @@ const EVENT_META: Record<LifeEventId, { title: string; emoji: string }> = {
   NEW_CHILD: { title: "New Child Journey", emoji: "👶" },
   VEHICLE_PURCHASE: { title: "Vehicle Purchase Journey", emoji: "🚗" },
   HOME_PURCHASE: { title: "Home Purchase Journey", emoji: "🏠" },
+  MARRIAGE: { title: "Marriage Journey", emoji: "💍" },
 };
 
 const TOOLS = [

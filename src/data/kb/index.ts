@@ -1,4 +1,5 @@
 import type { KbTopic } from "@/lib/types";
+import { KB_TOPICS_EXTRA } from "./extra";
 
 /**
  * Curated knowledge base — each entry mirrors what an official source states.
@@ -6,7 +7,7 @@ import type { KbTopic } from "@/lib/types";
  * For the hackathon we curate by hand; citations still work because every
  * topic carries department + lastUpdated.
  */
-export const KB_TOPICS: KbTopic[] = [
+export const KB_TOPICS: KbTopic[] = [...KB_TOPICS_EXTRA,
   {
     slug: "epfo-pf-transfer",
     title: "Transferring PF balance when changing jobs",

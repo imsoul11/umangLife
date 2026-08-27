@@ -11,7 +11,7 @@ export type ServiceId =
   | "STATE"
   | "TRANSPORT";
 
-export type LifeEventId = "JOB_CHANGE" | "NEW_CHILD" | "VEHICLE_PURCHASE" | "HOME_PURCHASE";
+export type LifeEventId = "JOB_CHANGE" | "NEW_CHILD" | "VEHICLE_PURCHASE" | "HOME_PURCHASE" | "MARRIAGE";
 
 export type TaskStatus = "locked" | "ready" | "in_progress" | "action_required" | "done";
 
