@@ -13,7 +13,7 @@ import { buildSystemPrompt } from "@/lib/prompts";
 import { findKbTopic } from "@/data/kb";
 import { JOURNEY_TEMPLATES } from "@/data/journeys";
 import { MOCK_DIGILOCKER_DOCS } from "@/data/mocks";
-import { computeTaskStatuses, materializeTaskDefs } from "@/lib/engine";
+import { computeTaskStatuses, computeUrgency, materializeTaskDefs } from "@/lib/engine";
 
 const EVENT_META: Record<LifeEventId, { title: string; emoji: string }> = {
   JOB_CHANGE: { title: "Job Change Journey", emoji: "💼" },
@@ -123,6 +123,30 @@ interface ToolOutcome {
   payload: unknown;
   createdJourney?: Journey;
   actions?: ChatAction[];
+}
+
+/**
+ * Fallback action chips when the model ends its turn without calling
+ * suggest_actions: the most urgent READY task(s) on the focused journey
+ * (or all journeys) still get one-tap "open form" buttons.
+ */
+function deriveActionsAfterReply(req: ChatRequest): ChatAction[] {
+  const journeys = req.journeys ?? [];
+  if (!journeys.length) return [];
+  const focused = req.focusedJourneyId ? journeys.find((j) => j.id === req.focusedJourneyId) : undefined;
+  const pool = focused ? [focused] : journeys;
+  const candidates: { c: ChatAction; urgency: number }[] = [];
+  const prepend = (a: ChatAction, u: number) => candidates.push({ c: a, urgency: u });
+  for (const j of pool) {
+    for (const t of computeTaskStatuses(j, MOCK_DIGILOCKER_DOCS)) {
+      if (t.status === "ready") {
+        prepend({ journeyId: j.id, taskId: t.id, kind: "open_form", label: t.title.length > 34 ? t.title.slice(0, 32) + "…" : t.title }, computeUrgency(t)?.score ?? 50);
+      } else if (t.status === "action_required") {
+        prepend({ journeyId: j.id, taskId: t.id, kind: "open_form", label: "Fix document for " + (t.title.length > 24 ? t.title.slice(0, 22) + "…" : t.title) }, (computeUrgency(t)?.score ?? 50) + 20);
+      }
+    }
+  }
+  return candidates.sort((a, b) => b.urgency - a.urgency).slice(0, 2).map((x) => x.c);
 }
 
 /** Validate model-proposed chips against live task state — hallucination firewall. */
@@ -238,6 +262,7 @@ export async function runChat(req: ChatRequest): Promise<ChatResponse> {
         detection: detectedJourney
           ? { lifeEvent: detectedJourney.lifeEvent, entities: detectedJourney.entities, journey: detectedJourney }
           : undefined,
+        actions: pendingActions ?? deriveActionsAfterReply(req),
       };
     }
     let terminalText: string | undefined;
@@ -287,6 +312,6 @@ export async function runChat(req: ChatRequest): Promise<ChatResponse> {
     detection: detectedJourney
       ? { lifeEvent: detectedJourney.lifeEvent, entities: detectedJourney.entities, journey: detectedJourney }
       : undefined,
-    actions: pendingActions,
+    actions: pendingActions ?? deriveActionsAfterReply(req),
   };
 }
