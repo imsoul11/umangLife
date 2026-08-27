@@ -19,7 +19,7 @@ export default function BenefitsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 relative z-[1]">
-      <header className="sticky top-0 z-40 border-b border-indigo-ink/10 bg-white/70 backdrop-blur-lg px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-40 border-b border-indigo-ink/10 bg-white/70 backdrop-blur-lg px-4 lg:px-6 py-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-jade to-indigo-ink text-white grid place-items-center font-bold shadow-md">₹</div>
           <div>
