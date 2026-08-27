@@ -24,6 +24,12 @@ export default function Dashboard() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [thinking, setThinking] = useState(false);
   const [activeTask, setActiveTask] = useState<TaskInstance | null>(null);
+  const [digiToast, setDigiToast] = useState<{ doc: string; key: number } | null>(null);
+  useEffect(() => {
+    if (!digiToast) return;
+    const t = setTimeout(() => setDigiToast(null), 3800);
+    return () => clearTimeout(t);
+  }, [digiToast]);
   /** gate: never persist until the initial restore has been applied */
   const [restored, setRestored] = useState(false);
 
@@ -215,6 +221,11 @@ export default function Dashboard() {
         };
         setMessages((m) => [...m, userLine, ack]);
       }
+      // the completed step produces a document that ships to DigiLocker
+      setDigiToast({
+        doc: `${target.title.replace(/ Decision expected| to .*/g, "")} · ${target.service.replace("_", " ")}`,
+        key: Date.now(),
+      });
     },
     [journeys],
   );
@@ -323,6 +334,18 @@ export default function Dashboard() {
           <ChatPanel messages={messages} thinking={thinking} onSend={sendMessage} onAction={handleChatAction} samples={journeys.length === 0 ? SAMPLE_PROMPTS.slice(0, 2) : []} scopeLabel={activeJourney ? `${activeJourney.emoji} ${activeJourney.title.replace(" Journey", "")}` : journeys.length ? `${journeys.length} journeys` : undefined} />
         </section>
       </main>
+
+      {digiToast && (
+        <div key={digiToast.key} className="fixed bottom-5 right-5 z-[60] anim-rise">
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-white/95 backdrop-blur px-4 py-3 shadow-xl">
+            <div className="w-9 h-9 rounded-full bg-emerald-100 grid place-items-center text-lg">🛡</div>
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Saved to your DigiLocker</p>
+              <p className="text-xs text-slate-500 truncate max-w-[220px]">{digiToast.doc}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {activeTask && activeJourney && (
         <TaskWizard

@@ -14,6 +14,15 @@ const FETCH_STAGES = [
   { label: "Prefilling fields from your authorized data", ms: 1250 },
 ];
 
+const DOC_KIND: Record<string, { icon: string; label: string }> = {
+  aadhaar: { icon: "🪀", label: "Aadhaar · UIDAI" },
+  pan: { icon: "🪀", label: "PAN · ITD" },
+  bank_passbook: { icon: "🏦", label: "Bank passbook" },
+  dl: { icon: "🏍", label: "Driving licence · RTO" },
+  vehicle_rc: { icon: "🚗", label: "Vehicle RC · RTO" },
+  vehicle_insurance: { icon: "🛡", label: "Insurance · Insurer" },
+};
+
 const SUBMIT_STAGES = [
   "Encrypting & signing your documents…",
   "Uploading application to the department portal…",
@@ -98,6 +107,18 @@ export default function TaskWizard({
   const [submitStage, setSubmitStage] = useState<number | null>(null);
 
   const fields = task.formFields ?? [];
+  const docKinds = useMemo(() => {
+    const seen = new Set<string>();
+    const out: { icon: string; label: string }[] = [];
+    for (const f of fields) {
+      if (!f.source || f.source.startsWith("entity:") || f.source.startsWith("profile:")) continue;
+      const kind = f.source.split(".")[0];
+      if (seen.has(kind) || !DOC_KIND[kind]) continue;
+      seen.add(kind);
+      out.push(DOC_KIND[kind]);
+    }
+    return out;
+  }, [fields]);
   const prefilledCount = fields.filter((f) => values[f.id]?.source && values[f.id].source !== "you").length;
   const filledCount = fields.filter((f) => values[f.id]?.value || f.type === "select").length;
   const missingRequired = fields.filter((f) => f.required !== false && !values[f.id]?.value);
@@ -210,13 +231,20 @@ export default function TaskWizard({
                 {i === fetchStage && <span className="ml-auto text-xs text-slate-400">please wait…</span>}
               </div>
             ))}
-            {fetchStage >= 2 && (
-              <div className="pt-2 space-y-2">
-                {[...Array(Math.min(prefilledCount || 3, 4))].map((_, i) => (
-                  <div key={i} className="shimmer h-9 rounded-lg" style={{ animationDelay: `${i * 150}ms` }} />
-                ))}
-              </div>
-            )}
+            <div className="pt-3 flex flex-wrap gap-1.5">
+              {docKinds.map((d, i) => (
+                <span
+                  key={d.label}
+                  className={`anim-pop inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-full ${
+                    fetchStage >= 3 ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "border border-slate-200 bg-slate-50 text-slate-500"
+                  }`}
+                  style={{ animationDelay: `${i * 130}ms` }}
+                >
+                  {d.icon} {d.label}
+                  {fetchStage >= 3 ? " ✓ found" : ""}
+                </span>
+              ))}
+            </div>
           </div>
         ) : justSubmitted ? (
           /* ---------- SUCCESS ---------- */
@@ -233,6 +261,9 @@ export default function TaskWizard({
                     {generatedRef}
                   </div>
                 )}
+                <div className="anim-rise inline-flex items-center gap-2 mt-3 px-3.5 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium">
+                  🛡 Saved to your DigiLocker — application slip
+                </div>
               </>
             ) : (
               <p className="text-sm text-slate-600">This unlocks the next steps in your journey.</p>
