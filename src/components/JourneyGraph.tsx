@@ -213,7 +213,6 @@ function JourneyGraphInner({
             }}
             fitView
             fitViewOptions={{ padding: 0.22 }}
-            proOptions={{ hideAttribution: true }}
             minZoom={0.35}
             maxZoom={1.05}
             nodesConnectable={false}

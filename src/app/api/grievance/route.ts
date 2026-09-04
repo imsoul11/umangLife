@@ -59,10 +59,15 @@ Return JSON only: {"subject": "<short line>", "body": "<full grievance text>"}`,
       ],
     });
 
-    const parsed = JSON.parse(res.choices[0]?.message?.content ?? "{}") as {
-      subject?: string;
-      body?: string;
-    };
+    let parsed: { subject?: string; body?: string } = {};
+    try {
+      parsed = JSON.parse(res.choices[0]?.message?.content ?? "{}") as {
+        subject?: string;
+        body?: string;
+      };
+    } catch {
+      // Model returned malformed JSON — fall through to the default draft below.
+    }
     return NextResponse.json({
       subject: parsed.subject ?? "Complaint regarding pending government service",
       body: parsed.body ?? "Unable to draft grievance from available information.",
