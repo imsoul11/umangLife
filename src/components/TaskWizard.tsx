@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CitizenProfile, DigilockerDocument, LifeEventEntities, TaskInstance } from "@/lib/types";
 import { resolveSource } from "@/lib/sources";
-import { StatusBadge } from "./Dashboard";
+import StatusBadge from "./StatusBadge";
 
 type Values = Record<string, { value: string; source?: string }>;
 

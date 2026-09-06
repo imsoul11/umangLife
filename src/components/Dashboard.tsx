@@ -8,14 +8,12 @@ import TaskWizard from "@/components/TaskWizard";
 import JourneyBuilder, { JOURNEY_BUILD_STAGES, JOURNEY_BUILD_STEP_MS } from "@/components/JourneyBuilder";
 import JourneyGraph from "@/components/JourneyGraph";
 import ChatPanel from "@/components/ChatPanel";
+import DashboardHeader from "@/components/DashboardHeader";
+import EmptyState, { SAMPLE_PROMPTS } from "@/components/EmptyState";
+import ProgressCard from "@/components/ProgressCard";
+import CalendarStrip from "@/components/CalendarStrip";
 
 const STORAGE_KEY = "umanglife-session-v2"; // DB swap point: read()
-
-const SAMPLE_PROMPTS = [
-  "I changed my job and moved from Maharashtra to Karnataka for TCS",
-  "I bought a second-hand car yesterday",
-  "What's still pending from my job change?",
-];
 
 export default function Dashboard() {
   const [profile] = useState<CitizenProfile>(MOCK_PROFILE);
@@ -258,43 +256,15 @@ export default function Dashboard() {
 
   return (
     <div className="relative min-h-screen z-[1]">
-      <header className="sticky top-0 z-40 border-b border-indigo-ink/10 bg-white/70 backdrop-blur-lg px-4 lg:px-6 py-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white grid place-items-center font-bold shadow-md shadow-saffron/25">
-            <span className="font-display text-lg leading-none">उ</span>
-          </div>
-          <div>
-            <h1 className="font-display font-semibold text-indigo-ink text-lg leading-tight tracking-tight">
-              UMANG <span className="text-saffron">&middot;</span> Life Journey
-            </h1>
-            <p className="text-[11px] text-slate-500">Life events → ordered government actions</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 text-[13px] flex-wrap ml-auto">
-          <a href="/benefits" className="font-medium text-slate-600 hover:text-saffron border border-slate-200 rounded-full px-3.5 py-1.5 hover:border-saffron/50 transition">
-            💰 My Benefits
-          </a>
-          <a href="/calendar" className="font-medium text-slate-600 hover:text-saffron border border-slate-200 rounded-full px-3.5 py-1.5 hover:border-saffron/50 transition">
-            📅 Calendar
-          </a>
-          <a href="/about" className="font-medium text-slate-600 hover:text-saffron border border-slate-200 rounded-full px-3.5 py-1.5 hover:border-saffron/50 transition">
-            ℹ️ About
-          </a>
-          <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 grid place-items-center font-semibold">
-            {profile.name[0]}
-          </span>
-          <div className="leading-tight">
-            <p className="font-medium text-slate-800">{profile.name}</p>
-            <p className="text-xs text-slate-500">{profile.state} · {profile.occupation}</p>
-          </div>
-          <button
-            onClick={() => { localStorage.removeItem(STORAGE_KEY); setJourneys([]); setMessages([]); setActiveId(null); }}
-            className="ml-3 text-xs text-slate-400 hover:text-slate-600 underline"
-          >
-            reset demo
-          </button>
-        </div>
-      </header>
+      <DashboardHeader
+        profile={profile}
+        onReset={() => {
+          localStorage.removeItem(STORAGE_KEY);
+          setJourneys([]);
+          setMessages([]);
+          setActiveId(null);
+        }}
+      />
 
       <main className="max-w-7xl mx-auto p-4 lg:p-6 grid lg:grid-cols-[1fr_400px] gap-4 lg:gap-6">
         <section className="space-y-4 min-w-0">
@@ -366,78 +336,5 @@ export default function Dashboard() {
         />
       )}
     </div>
-  );
-}
-
-/* ---------------- subcomponents ---------------- */
-
-function EmptyState({ onPrompt }: { onPrompt: (t: string) => void }) {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center space-y-5">
-      <div className="text-5xl">🏛️</div>
-      <h2 className="text-xl font-semibold text-slate-800">Tell me what happened in your life</h2>
-      <p className="text-sm text-slate-500 max-w-md mx-auto">
-        Describe a life event in plain words. I&apos;ll find every government action you need, in the right order.
-      </p>
-      <div className="flex flex-wrap justify-center gap-2 pt-2">
-        {SAMPLE_PROMPTS.slice(0, 2).map((s) => (
-          <button key={s} onClick={() => onPrompt(s)} className="text-xs px-3 py-2 rounded-full border border-slate-300 text-slate-600 hover:border-orange-500 hover:text-orange-600 transition">
-            “{s}”
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function ProgressCard({ journey, progress, done, total }: { journey: Journey; progress: number; done: number; total: number }) {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-5 flex items-center gap-4">
-      <div className="text-3xl">{journey.emoji}</div>
-      <div className="flex-1 min-w-0">
-        <h2 className="font-semibold text-slate-900">{journey.title}</h2>
-        <div className="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
-          <div className="h-full rounded-full bg-emerald-500 transition-all duration-500" style={{ width: `${progress}%` }} />
-        </div>
-      </div>
-      <div className="text-right shrink-0">
-        <p className="text-lg font-bold text-slate-900">{done}/{total}</p>
-        <p className="text-xs text-slate-500">completed</p>
-      </div>
-    </div>
-  );
-}
-
-function CalendarStrip({ entries }: { entries: CalendarEntry[] }) {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">My Government Calendar</h3>
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {entries.map((e) => (
-          <div key={e.id} className={`shrink-0 rounded-xl border p-3 text-xs w-44 ${
-            e.severity === "urgent" ? "border-red-200 bg-red-50" : e.severity === "warning" ? "border-amber-200 bg-amber-50" : "border-slate-200 bg-slate-50"
-          }`}>
-            <p className="font-medium text-slate-700">{new Date(e.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
-            <p className="mt-1 text-slate-600 leading-snug">{e.title}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function StatusBadge({ status }: { status: TaskInstance["status"] }) {
-  const map = {
-    locked: ["🔒", "bg-slate-100 text-slate-500"],
-    ready: ["▶", "bg-blue-100 text-blue-700"],
-    in_progress: ["⏳", "bg-yellow-100 text-yellow-700"],
-    action_required: ["⚠️", "bg-amber-100 text-amber-800"],
-    done: ["✓", "bg-emerald-100 text-emerald-700"],
-  } as const;
-  const [icon, cls] = map[status];
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${cls}`}>
-      {icon} {status.replace("_", " ")}
-    </span>
   );
 }

@@ -18,7 +18,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import type { TaskInstance } from "@/lib/types";
 import { computeUrgency } from "@/lib/engine";
-import { StatusBadge } from "./Dashboard";
+import StatusBadge from "./StatusBadge";
 
 /** Group tasks into topological layers (row 0 = roots, each row unlocks after the one above). */
 export function getLayers(tasks: TaskInstance[]): TaskInstance[][] {
