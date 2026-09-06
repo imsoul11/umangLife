@@ -18,6 +18,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import type { TaskInstance } from "@/lib/types";
 import { computeUrgency } from "@/lib/engine";
+import { TASK_NODE_STYLE, TASK_ROW_STYLE } from "@/lib/taskStyle";
 import StatusBadge from "./StatusBadge";
 
 /** Group tasks into topological layers (row 0 = roots, each row unlocks after the one above). */
@@ -55,16 +56,7 @@ const GAP_Y = 56;
 type TaskNodeData = { task: TaskInstance };
 function TaskNode({ data }: NodeProps) {
   const { task } = data as unknown as TaskNodeData;
-  const style =
-    task.status === "done"
-      ? "border-emerald-400 bg-emerald-50"
-      : task.status === "ready"
-        ? "border-orange-500 bg-white shadow-md shadow-orange-100 ring-2 ring-orange-200 animate-pulse-border"
-        : task.status === "action_required"
-          ? "border-amber-400 bg-amber-50"
-          : task.status === "in_progress"
-            ? "border-yellow-400 bg-yellow-50"
-            : "border-slate-200 bg-slate-50 border-dashed opacity-70";
+  const style = TASK_NODE_STYLE[task.status];
 
   return (
     <div className={`anim-pop w-[240px] rounded-xl border-2 ${style} bg-clip-padding`}>
@@ -262,17 +254,7 @@ function ListView({ tasks, onSelect }: { tasks: TaskInstance[]; onSelect: (t: Ta
                 key={task.id}
                 onClick={() => task.status !== "locked" && onSelect(task)}
                 disabled={task.status === "locked"}
-                className={`text-left rounded-xl border p-3.5 w-full ${
-                  task.status === "done"
-                    ? "border-emerald-200 bg-emerald-50/60"
-                    : task.status === "ready"
-                      ? "border-orange-400 bg-white shadow-sm hover:shadow-md cursor-pointer"
-                      : task.status === "action_required"
-                        ? "border-amber-300 bg-amber-50/60 cursor-pointer"
-                        : task.status === "in_progress"
-                          ? "border-yellow-300 bg-yellow-50/60 cursor-pointer"
-                          : "border-dashed border-slate-200 bg-slate-100/60 opacity-70 cursor-not-allowed"
-                }`}
+                className={`text-left rounded-xl border p-3.5 w-full ${TASK_ROW_STYLE[task.status]}`}
               >
                 <p className={`text-sm font-medium ${task.status === "done" ? "text-emerald-800 line-through" : "text-slate-800"}`}>
                   {task.title}

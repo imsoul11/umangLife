@@ -4,9 +4,6 @@ import type { CitizenProfile, DigilockerDocument } from "@/lib/types";
 export const MOCK_PROFILE: CitizenProfile & {
   hasBankAccount: boolean;
   ownsLand: boolean;
-  childCount: number;
-  youngestChildAge: number;
-  youngestGirlChildAge: number | null;
 } = {
   name: "Antas Jain",
   age: 27,
@@ -20,12 +17,10 @@ export const MOCK_PROFILE: CitizenProfile & {
   paysIncomeTax: true,
   hasDrivingLicence: true,
   ownsVehicle: true,
-  // derived convenience fields consumed by the eligibility matcher
+  // extra facts consumed by the eligibility matcher (childCount / youngest*Age
+  // are DERIVED by engine.resolveField — never duplicate them here)
   hasBankAccount: true,
   ownsLand: false,
-  childCount: 1,
-  youngestChildAge: 6,
-  youngestGirlChildAge: 6,
 };
 
 /**
