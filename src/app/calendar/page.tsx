@@ -4,14 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { CalendarEntry, Journey, TaskInstance } from "@/lib/types";
 import { buildCalendar } from "@/lib/engine";
 import { buildDemoJourneys } from "@/data/seed";
-
-const STORAGE_KEY = "umanglife-session-v2";
-const GRIEVANCE_KEY = "umanglife-grievances-v1";
-
-interface EscalatedRecord {
-  grievanceId: string;
-  at: string;
-}
+import { loadEscalations, loadSession, saveEscalations, saveSession, type EscalatedRecord } from "@/lib/repository";
 
 interface GrievanceState {
   entry: CalendarEntry;
@@ -67,30 +60,22 @@ export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState<string>(toDayKey(today.toISOString()));
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw) as { journeys?: Journey[] };
-        if (saved.journeys) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read
-          setJourneys(saved.journeys);
-        }
-      }
-    } catch {}
-    try {
-      const raw = localStorage.getItem(GRIEVANCE_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw) as Record<string, EscalatedRecord>;
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read
-        setEscalated(saved);
-      }
-    } catch {}
+    const saved = loadSession();
+    if (saved?.journeys?.length) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read
+      setJourneys(saved.journeys);
+    }
+    const escalations = loadEscalations();
+    if (Object.keys(escalations).length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read
+      setEscalated(escalations);
+    }
     setReady(true);
   }, []);
 
   useEffect(() => {
     if (!ready) return;
-    localStorage.setItem(GRIEVANCE_KEY, JSON.stringify(escalated));
+    saveEscalations(escalated);
   }, [ready, escalated]);
 
   const entries = useMemo(() => {
@@ -221,7 +206,7 @@ export default function CalendarPage() {
               onClick={() => {
                 const seeded = buildDemoJourneys();
                 setJourneys(seeded);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify({ journeys: seeded, messages: [], activeId: seeded[0]?.id }));
+                saveSession({ journeys: seeded, messages: [], activeId: seeded[0]?.id });
               }}
               className="px-4 py-2.5 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white text-sm font-semibold shadow-md hover:opacity-95 transition"
             >

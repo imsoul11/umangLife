@@ -14,9 +14,8 @@ import {
 import type { ChatAction, ChatMessage, CitizenProfile, Journey, TaskInstance } from "@/lib/types";
 import { MOCK_DIGILOCKER_DOCS, MOCK_PROFILE } from "@/data/mocks";
 import { computeTaskStatuses } from "@/lib/engine";
+import { clearSession, loadSession, saveSession } from "@/lib/repository";
 import { JOURNEY_BUILD_STAGES, JOURNEY_BUILD_STEP_MS } from "@/components/JourneyBuilder";
-
-const STORAGE_KEY = "umanglife-session-v2"; // DB swap point: read()
 
 interface JourneyContextValue {
   profile: CitizenProfile;
@@ -66,25 +65,22 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
   /** gate: never persist until the initial restore has been applied */
   const [restored, setRestored] = useState(false);
 
-  /* ---- persistence: the "database" (swap these two effects for API calls) ---- */
+  /* ---- persistence: the "database" (swap the repository for API calls) ---- */
   useEffect(() => {
     let cancelled = false;
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw) as { journeys?: Journey[]; messages?: ChatMessage[]; activeId?: string };
-        if (saved.journeys?.length) {
-          // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from localStorage
-          setJourneys(saved.journeys);
-          // restore the tab the user was on — never silently jump to journeys[0]
-          const valid = saved.activeId && saved.journeys.some((j) => j.id === saved.activeId) ? saved.activeId : saved.journeys[0].id;
-          // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from localStorage
-          setActiveId(valid);
-        }
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from localStorage
-        if (saved.messages) setMessages(saved.messages);
+    const saved = loadSession();
+    if (saved) {
+      if (saved.journeys?.length) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from storage
+        setJourneys(saved.journeys);
+        // restore the tab the user was on — never silently jump to journeys[0]
+        const valid = saved.activeId && saved.journeys.some((j) => j.id === saved.activeId) ? saved.activeId : saved.journeys[0].id;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from storage
+        setActiveId(valid);
       }
-    } catch {}
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from storage
+      if (saved.messages) setMessages(saved.messages);
+    }
     if (!cancelled) setRestored(true);
     return () => {
       cancelled = true;
@@ -92,7 +88,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
   }, []);
   useEffect(() => {
     if (!restored) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ journeys, messages, activeId }));
+    saveSession({ journeys, messages, activeId });
   }, [restored, journeys, messages, activeId]);
 
   const sendMessage = useCallback(
@@ -277,7 +273,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
   );
 
   const resetDemo = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    clearSession();
     setJourneys([]);
     setMessages([]);
     setActiveId(null);
