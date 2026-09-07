@@ -1,15 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { SchemeMatch } from "@/lib/types";
+import { useEffect, useMemo, useState } from "react";
+import type { CitizenProfile, SchemeMatch } from "@/lib/types";
 import { SCHEMES } from "@/data/schemes";
 import { MOCK_PROFILE } from "@/data/mocks";
 import { matchSchemes } from "@/lib/engine";
+import { loadSession } from "@/lib/repository";
 
 type Tab = "eligible" | "near" | "all";
 
 export default function BenefitsPage() {
-  const matches = useMemo(() => matchSchemes(MOCK_PROFILE, SCHEMES), []);
+  const [profile, setProfile] = useState<CitizenProfile>(MOCK_PROFILE);
+  useEffect(() => {
+    const saved = loadSession()?.profile;
+    if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from storage
+      setProfile(saved);
+    }
+  }, []);
+  const matches = useMemo(() => matchSchemes(profile, SCHEMES), [profile]);
   const [tab, setTab] = useState<Tab>("eligible");
 
   const eligible = matches.filter((m) => m.eligible);
@@ -26,7 +35,7 @@ export default function BenefitsPage() {
             <h1 className="font-display font-semibold text-indigo-ink text-lg leading-tight tracking-tight">Your Benefit Matches</h1>
             <p className="text-xs text-slate-500">
               Deterministic eligibility engine · {eligible.length} of {matches.length} schemes matched ·{" "}
-              {MOCK_PROFILE.state} resident
+              {profile.state} resident
             </p>
           </div>
         </div>

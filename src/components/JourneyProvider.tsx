@@ -11,7 +11,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
-import type { ChatAction, ChatMessage, CitizenProfile, Journey, TaskInstance } from "@/lib/types";
+import type { ChatAction, ChatMessage, CitizenProfile, DigilockerDocument, Journey, TaskInstance } from "@/lib/types";
 import { MOCK_DIGILOCKER_DOCS, MOCK_PROFILE } from "@/data/mocks";
 import { computeTaskStatuses } from "@/lib/engine";
 import { clearSession, loadSession, saveSession } from "@/lib/repository";
@@ -19,6 +19,9 @@ import { JOURNEY_BUILD_STAGES, JOURNEY_BUILD_STEP_MS } from "@/components/Journe
 
 interface JourneyContextValue {
   profile: CitizenProfile;
+  setProfile: Dispatch<SetStateAction<CitizenProfile>>;
+  docs: DigilockerDocument[];
+  setDocs: Dispatch<SetStateAction<DigilockerDocument[]>>;
   journeys: Journey[];
   activeId: string | null;
   setActiveId: Dispatch<SetStateAction<string | null>>;
@@ -50,7 +53,8 @@ export function useJourneys(): JourneyContextValue {
 }
 
 export function JourneyProvider({ children }: { children: ReactNode }) {
-  const [profile] = useState<CitizenProfile>(MOCK_PROFILE);
+  const [profile, setProfile] = useState<CitizenProfile>(MOCK_PROFILE);
+  const [docs, setDocs] = useState<DigilockerDocument[]>(MOCK_DIGILOCKER_DOCS);
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -75,11 +79,14 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
         setJourneys(saved.journeys);
         // restore the tab the user was on — never silently jump to journeys[0]
         const valid = saved.activeId && saved.journeys.some((j) => j.id === saved.activeId) ? saved.activeId : saved.journeys[0].id;
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from storage
         setActiveId(valid);
       }
       // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from storage
       if (saved.messages) setMessages(saved.messages);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from storage
+      if (saved.profile) setProfile(saved.profile);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from storage
+      if (saved.docs) setDocs(saved.docs);
     }
     if (!cancelled) setRestored(true);
     return () => {
@@ -88,8 +95,8 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
   }, []);
   useEffect(() => {
     if (!restored) return;
-    saveSession({ journeys, messages, activeId });
-  }, [restored, journeys, messages, activeId]);
+    saveSession({ journeys, messages, activeId, profile, docs });
+  }, [restored, journeys, messages, activeId, profile, docs]);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -196,7 +203,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
       if (!owner) return;
       const target = owner.tasks.find((t) => t.id === taskId);
       if (!target) return;
-      const before = computeTaskStatuses(owner, MOCK_DIGILOCKER_DOCS);
+      const before = computeTaskStatuses(owner, docs);
 
       const tasksRaw = owner.tasks.map((t) =>
         t.id === taskId
@@ -206,7 +213,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
           : t,
       );
       const draft: Journey = { ...owner, tasks: tasksRaw };
-      const after = computeTaskStatuses(draft, MOCK_DIGILOCKER_DOCS);
+      const after = computeTaskStatuses(draft, docs);
       setJourneys((prev) => prev.map((j) => (j.id === journeyId ? { ...draft, tasks: after } : j)));
       setDrafts((d) => ({ ...d, [taskId]: {} }));
 
@@ -243,7 +250,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
         key: Date.now(),
       });
     },
-    [journeys],
+    [journeys, docs],
   );
 
   /** Field-level "Ask AI" — hop to chat with a grounded question; draft is kept. */
@@ -260,7 +267,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     (a: ChatAction) => {
       const owner = journeys.find((j) => j.id === a.journeyId) ?? journeys.find((j) => j.tasks.some((t) => t.id === a.taskId));
       if (!owner) return;
-      const t = computeTaskStatuses(owner, MOCK_DIGILOCKER_DOCS).find((x) => x.id === a.taskId);
+      const t = computeTaskStatuses(owner, docs).find((x) => x.id === a.taskId);
       if (!t || t.status === "locked" || t.status === "done") return;
       setActiveId(owner.id);
       if (a.kind === "mark_done") {
@@ -269,7 +276,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
         setActiveTask(t);
       }
     },
-    [journeys, completeTask],
+    [journeys, completeTask, docs],
   );
 
   const resetDemo = useCallback(() => {
@@ -281,6 +288,9 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
 
   const value: JourneyContextValue = {
     profile,
+    setProfile,
+    docs,
+    setDocs,
     journeys,
     activeId,
     setActiveId,

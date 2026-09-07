@@ -1,8 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import type { CalendarEntry, Journey, TaskInstance } from "@/lib/types";
-import { MOCK_DIGILOCKER_DOCS } from "@/data/mocks";
+import { useMemo, useState } from "react";
+import type { CalendarEntry, TaskInstance } from "@/lib/types";
 import { buildCalendar, computeTaskStatuses } from "@/lib/engine";
 import TaskWizard from "@/components/TaskWizard";
 import JourneyBuilder from "@/components/JourneyBuilder";
@@ -12,11 +11,13 @@ import DashboardHeader from "@/components/DashboardHeader";
 import EmptyState, { SAMPLE_PROMPTS } from "@/components/EmptyState";
 import ProgressCard from "@/components/ProgressCard";
 import CalendarStrip from "@/components/CalendarStrip";
+import ProfileEditor from "@/components/ProfileEditor";
 import { JourneyProvider, useJourneys } from "@/components/JourneyProvider";
 
 function DashboardInner() {
   const {
     profile,
+    docs,
     journeys,
     activeId,
     setActiveId,
@@ -38,9 +39,10 @@ function DashboardInner() {
     markFetched,
     resetDemo,
   } = useJourneys();
+  const [editorOpen, setEditorOpen] = useState(false);
 
   const activeJourney = journeys.find((j) => j.id === activeId) ?? null;
-  const activeTasks: TaskInstance[] = activeJourney ? computeTaskStatuses(activeJourney, MOCK_DIGILOCKER_DOCS) : [];
+  const activeTasks: TaskInstance[] = activeJourney ? computeTaskStatuses(activeJourney, docs) : [];
   const calendar: CalendarEntry[] = useMemo(
     () => journeys.flatMap((j) => buildCalendar(j)),
     [journeys],
@@ -50,7 +52,7 @@ function DashboardInner() {
 
   return (
     <div className="relative min-h-screen z-[1]">
-      <DashboardHeader profile={profile} onReset={resetDemo} />
+      <DashboardHeader profile={profile} onReset={resetDemo} onOpenProfile={() => setEditorOpen(true)} />
 
       <main className="max-w-7xl mx-auto p-4 lg:p-6 grid lg:grid-cols-[1fr_400px] gap-4 lg:gap-6">
         <section className="space-y-4 min-w-0">
@@ -58,7 +60,7 @@ function DashboardInner() {
           {!building && journeys.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-1">
               {journeys.map((j) => {
-                const st = computeTaskStatuses(j, MOCK_DIGILOCKER_DOCS);
+                const st = computeTaskStatuses(j, docs);
                 const done = st.filter((t) => t.status === "done").length;
                 return (
                   <button key={j.id} onClick={() => setActiveId(j.id)}
@@ -106,11 +108,13 @@ function DashboardInner() {
         </div>
       )}
 
+      {editorOpen && <ProfileEditor onClose={() => setEditorOpen(false)} />}
+
       {activeTask && activeJourney && (
         <TaskWizard
           task={activeTask}
           entities={activeJourney.entities}
-          docs={MOCK_DIGILOCKER_DOCS}
+          docs={docs}
           profile={profile}
           savedDraft={drafts[activeTask.id]}
           skipFetch={fetchedForms.has(activeTask.id)}

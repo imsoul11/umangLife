@@ -6,7 +6,7 @@ import {
   saveEscalations,
   saveSession,
 } from "@/lib/repository";
-import type { ChatMessage, Journey } from "@/lib/types";
+import type { ChatMessage, DigilockerDocument, Journey } from "@/lib/types";
 
 const store = new Map<string, string>();
 
@@ -35,10 +35,31 @@ const journey: Journey = {
 
 const message: ChatMessage = { role: "user", content: "hello", ts: 1 };
 
+const PROFILE = {
+  name: "Antas Jain",
+  age: 27,
+  gender: "male" as const,
+  state: "Karnataka",
+  occupation: "salaried" as const,
+  annualIncomeInr: 450000,
+  married: true,
+  children: [],
+  hasDisability: false,
+  paysIncomeTax: true,
+};
+
 describe("session repository", () => {
   it("round-trips a snapshot", () => {
     saveSession({ journeys: [journey], messages: [message], activeId: "j1" });
     expect(loadSession()).toEqual({ journeys: [journey], messages: [message], activeId: "j1" });
+  });
+
+  it("round-trips profile and document edits", () => {
+    const doc: DigilockerDocument = { type: "ADDRESS_PROOF", issuer: "Self uploaded", verified: true, fields: {} };
+    saveSession({ journeys: [journey], activeId: "j1", profile: { ...PROFILE, state: "Delhi" }, docs: [doc] });
+    const saved = loadSession();
+    expect(saved?.profile?.state).toBe("Delhi");
+    expect(saved?.docs).toEqual([doc]);
   });
 
   it("returns null when nothing is stored", () => {

@@ -2,7 +2,7 @@
 
 import type { CitizenProfile } from "@/lib/types";
 
-export default function DashboardHeader({ profile, onReset }: { profile: CitizenProfile; onReset: () => void }) {
+export default function DashboardHeader({ profile, onReset, onOpenProfile }: { profile: CitizenProfile; onReset: () => void; onOpenProfile: () => void }) {
   return (
     <header className="sticky top-0 z-40 border-b border-indigo-ink/10 bg-white/70 backdrop-blur-lg px-4 lg:px-6 py-3 flex flex-wrap items-center justify-between gap-2">
       <div className="flex items-center gap-3">
@@ -26,13 +26,16 @@ export default function DashboardHeader({ profile, onReset }: { profile: Citizen
         <a href="/about" className="font-medium text-slate-600 hover:text-saffron border border-slate-200 rounded-full px-3.5 py-1.5 hover:border-saffron/50 transition">
           ℹ️ About
         </a>
-        <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 grid place-items-center font-semibold">
-          {profile.name[0]}
-        </span>
-        <div className="leading-tight">
-          <p className="font-medium text-slate-800">{profile.name}</p>
-          <p className="text-xs text-slate-500">{profile.state} · {profile.occupation}</p>
-        </div>
+        <button onClick={onOpenProfile} className="flex items-center gap-2 rounded-full pl-1 pr-3 py-1 hover:bg-slate-100 transition text-left" title="Edit profile & DigiLocker documents">
+          <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 grid place-items-center font-semibold">
+            {profile.name[0]}
+          </span>
+          <span className="leading-tight">
+            <span className="block font-medium text-slate-800">{profile.name}</span>
+            <span className="block text-xs text-slate-500">{profile.state} · {profile.occupation}</span>
+          </span>
+          <span className="text-[10px] text-slate-400 ml-1">✎</span>
+        </button>
         <button
           onClick={onReset}
           className="ml-3 text-xs text-slate-400 hover:text-slate-600 underline"
