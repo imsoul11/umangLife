@@ -1,11 +1,13 @@
 "use client";
 
 import type { CalendarEntry } from "@/lib/types";
+import { useLocale } from "./LocaleProvider";
 
 export default function CalendarStrip({ entries }: { entries: CalendarEntry[] }) {
+  const { t } = useLocale();
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-4">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">My Government Calendar</h3>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-3">{t("calendar.title")}</h3>
       <div className="flex gap-2 overflow-x-auto pb-1">
         {entries.map((e) => (
           <div key={e.id} className={`shrink-0 rounded-xl border p-3 text-xs w-44 ${

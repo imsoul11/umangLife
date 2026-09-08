@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearSession,
   loadEscalations,
+  loadLocale,
   loadSession,
   saveEscalations,
+  saveLocale,
   saveSession,
 } from "@/lib/repository";
 import type { ChatMessage, DigilockerDocument, Journey } from "@/lib/types";
@@ -90,5 +92,15 @@ describe("escalations repository", () => {
   it("returns an empty map on corrupted JSON instead of throwing", () => {
     localStorage.setItem("umanglife-grievances-v1", "]]]");
     expect(loadEscalations()).toEqual({});
+  });
+});
+
+describe("locale repository", () => {
+  it("round-trips the locale and rejects unknown values", () => {
+    expect(loadLocale()).toBeNull();
+    saveLocale("hi");
+    expect(loadLocale()).toBe("hi");
+    localStorage.setItem("umanglife-locale", "fr");
+    expect(loadLocale()).toBeNull();
   });
 });

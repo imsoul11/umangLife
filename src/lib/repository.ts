@@ -1,4 +1,5 @@
 import type { ChatMessage, CitizenProfile, DigilockerDocument, Journey } from "@/lib/types";
+import type { Locale } from "@/lib/i18n";
 
 /**
  * The ONLY module allowed to touch storage. Today that is localStorage;
@@ -23,6 +24,20 @@ export type EscalationMap = Record<string, EscalatedRecord>;
 
 const SESSION_KEY = "umanglife-session-v2";
 const GRIEVANCE_KEY = "umanglife-grievances-v1";
+const LOCALE_KEY = "umanglife-locale";
+
+export function loadLocale(): Locale | null {
+  try {
+    const v = localStorage.getItem(LOCALE_KEY);
+    return v === "en" || v === "hi" ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveLocale(locale: Locale): void {
+  localStorage.setItem(LOCALE_KEY, locale);
+}
 
 export function loadSession(): SessionSnapshot | null {
   try {
