@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { aiProvider, requireApiKey } from "@/lib/env";
 
 /**
  * Single AI entry point. Talks to Gemini through its OpenAI-compatible
@@ -10,21 +11,18 @@ export interface AIClient {
 }
 
 export function getAIClient(): AIClient {
-  const provider = process.env.AI_PROVIDER ?? "gemini";
+  const provider = aiProvider();
 
   if (provider === "openai") {
     return {
-      client: new OpenAI({ apiKey: process.env.OPENAI_API_KEY }),
+      client: new OpenAI({ apiKey: requireApiKey("openai") }),
       model: process.env.AI_MODEL ?? "gpt-4o-mini",
     };
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY missing — set it in .env.local");
-
   return {
     client: new OpenAI({
-      apiKey,
+      apiKey: requireApiKey("gemini"),
       baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
     }),
     model: process.env.AI_MODEL ?? "gemini-3.6-flash",

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { Journey, TaskInstance } from "@/lib/types";
 import { getAIClient } from "@/lib/ai";
+import { clientKey, rateLimit } from "@/lib/rateLimit";
 
 interface GrievanceRequest {
   task: TaskInstance;
@@ -13,6 +14,13 @@ interface GrievanceRequest {
  * The model never invents — if given too little context it says so.
  */
 export async function POST(request: Request) {
+  const limit = rateLimit(`grievance:${clientKey(request)}`, { capacity: 5, refillPerMinute: 5 });
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "Too many requests — please wait a moment and try again." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfterSec) } },
+    );
+  }
   try {
     const body = (await request.json()) as GrievanceRequest;
     if (!body.task || !body.journey) {

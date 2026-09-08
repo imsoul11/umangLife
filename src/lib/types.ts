@@ -199,6 +199,11 @@ export interface ChatRequest {
   focusedJourneyId?: string;
   profile: CitizenProfile;
   history: ChatMessage[];
+  /**
+   * The citizen's current DigiLocker documents (added 2026-09). Optional for
+   * backward compatibility — the server falls back to its mock set.
+   */
+  docs?: DigilockerDocument[];
 }
 
 /** POST /api/chat response — exactly one of the branches fills its payload. */

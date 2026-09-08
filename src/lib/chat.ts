@@ -15,6 +15,14 @@ import { JOURNEY_TEMPLATES } from "@/data/journeys";
 import { MOCK_DIGILOCKER_DOCS } from "@/data/mocks";
 import { computeTaskStatuses, computeUrgency, materializeTaskDefs } from "@/lib/engine";
 
+/**
+ * The caller's live DigiLocker set when provided (so chat agrees with the
+ * graph after doc edits); the mock set otherwise.
+ */
+function docsOf(req: ChatRequest) {
+  return req.docs?.length ? req.docs : MOCK_DIGILOCKER_DOCS;
+}
+
 const EVENT_META: Record<LifeEventId, { title: string; emoji: string }> = {
   JOB_CHANGE: { title: "Job Change Journey", emoji: "💼" },
   NEW_CHILD: { title: "New Child Journey", emoji: "👶" },
@@ -98,6 +106,7 @@ function createJourney(
   lifeEvent: LifeEventId,
   entities: LifeEventEntities,
   profile: ChatRequest["profile"],
+  docs: ChatRequest["docs"],
 ): Journey | null {
   const template = JOURNEY_TEMPLATES[lifeEvent];
   if (!template) return null;
@@ -115,7 +124,7 @@ function createJourney(
     entities,
     tasks,
   };
-  journey.tasks = computeTaskStatuses(journey, MOCK_DIGILOCKER_DOCS);
+  journey.tasks = computeTaskStatuses(journey, docs ?? MOCK_DIGILOCKER_DOCS);
   return journey;
 }
 
@@ -138,7 +147,7 @@ function deriveActionsAfterReply(req: ChatRequest): ChatAction[] {
   const candidates: { c: ChatAction; urgency: number }[] = [];
   const prepend = (a: ChatAction, u: number) => candidates.push({ c: a, urgency: u });
   for (const j of pool) {
-    for (const t of computeTaskStatuses(j, MOCK_DIGILOCKER_DOCS)) {
+    for (const t of computeTaskStatuses(j, docsOf(req))) {
       if (t.status === "ready") {
         prepend({ journeyId: j.id, taskId: t.id, kind: "open_form", label: t.title.length > 34 ? t.title.slice(0, 32) + "…" : t.title }, computeUrgency(t)?.score ?? 50);
       } else if (t.status === "action_required") {
@@ -154,7 +163,7 @@ function validateActions(raw: unknown, req: ChatRequest): ChatAction[] {
   const list = (raw as { actions?: { taskId?: string; kind?: string; label?: string }[] })?.actions ?? [];
   const valid: ChatAction[] = [];
   for (const j of req.journeys ?? []) {
-    for (const t of computeTaskStatuses(j, MOCK_DIGILOCKER_DOCS)) {
+    for (const t of computeTaskStatuses(j, docsOf(req))) {
       const proposal = list.find((a) => a.taskId === t.id);
       if (!proposal || !proposal.label) continue;
       if (t.status === "ready") {
@@ -183,7 +192,7 @@ function executeTool(name: string, argsJson: string, req: ChatRequest): ToolOutc
         },
       };
     }
-    const journey = createJourney(args.lifeEvent as LifeEventId, args as LifeEventEntities, req.profile);
+    const journey = createJourney(args.lifeEvent as LifeEventId, args as LifeEventEntities, req.profile, docsOf(req));
     if (!journey) return { payload: { error: `Unknown life event ${args.lifeEvent}` } };
     const ready = journey.tasks.filter((t) => t.status !== "locked").length;
     return {
@@ -214,7 +223,7 @@ function executeTool(name: string, argsJson: string, req: ChatRequest): ToolOutc
     return {
       payload: journeys.map((j) => ({
         journey: j.title,
-        tasks: computeTaskStatuses(j, MOCK_DIGILOCKER_DOCS).map((t) => ({
+        tasks: computeTaskStatuses(j, docsOf(req)).map((t) => ({
           id: t.id,
           status: t.status,
           title: t.title,

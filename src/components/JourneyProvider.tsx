@@ -109,7 +109,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: userMsg.content, profile, journeys, focusedJourneyId: activeId, history }),
+          body: JSON.stringify({ message: userMsg.content, profile, journeys, focusedJourneyId: activeId, history, docs }),
         });
         const data = await res.json();
         const reply: ChatMessage = {
@@ -136,7 +136,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
         setThinking(false);
       }
     },
-    [messages, profile, journeys, activeId, thinking],
+    [messages, profile, journeys, activeId, thinking, docs],
   );
 
   /** Drafts survive hopping from wizard to chat and back. */
