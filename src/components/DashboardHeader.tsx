@@ -3,6 +3,7 @@
 import type { CitizenProfile } from "@/lib/types";
 import { useLocale } from "./LocaleProvider";
 import LanguageToggle from "./LanguageToggle";
+import AuthMenu from "./AuthMenu";
 
 export default function DashboardHeader({ profile, onReset, onOpenProfile }: { profile: CitizenProfile; onReset: () => void; onOpenProfile: () => void }) {
   const { t } = useLocale();
@@ -30,6 +31,7 @@ export default function DashboardHeader({ profile, onReset, onOpenProfile }: { p
           {t("nav.about")}
         </a>
         <LanguageToggle />
+        <AuthMenu />
         <button onClick={onOpenProfile} className="flex items-center gap-2 rounded-full pl-1 pr-3 py-1 hover:bg-slate-100 transition text-left" title={t("header.editProfile")}>
           <span className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 grid place-items-center font-semibold">
             {profile.name[0]}

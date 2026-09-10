@@ -1,15 +1,17 @@
 import { randomUUID } from "node:crypto";
+import { AUTH_COOKIE, readAuthSession } from "@/lib/auth";
 
 /**
- * Resolves who owns the incoming request's data. Today: an anonymous device
- * cookie; auth (commit b) upgrades this to an authenticated user id and
- * migrates device data on login.
+ * Owner resolution: an authenticated session cookie wins; otherwise an
+ * anonymous device cookie, minting one when absent.
  */
 export interface Owner {
   id: string;
-  /** Set-Cookie header value when a new device identity was minted */
+  /** Set-Cookie header value when a new identity was minted this request */
   setCookie?: string;
 }
+
+export const DEVICE_COOKIE = "umang_device";
 
 export function readCookie(request: Request, name: string): string | undefined {
   const header = request.headers.get("cookie") ?? "";
@@ -20,9 +22,10 @@ export function readCookie(request: Request, name: string): string | undefined {
   return undefined;
 }
 
-export const DEVICE_COOKIE = "umang_device";
-
 export function resolveOwner(request: Request): Owner {
+  const auth = readAuthSession(readCookie(request, "umang_auth"));
+  if (auth) return { id: `user:${auth.userId}` };
+
   const device = readCookie(request, DEVICE_COOKIE);
   if (device) return { id: `device:${device}` };
   const id = randomUUID();
