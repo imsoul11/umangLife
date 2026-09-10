@@ -60,22 +60,29 @@ export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState<string>(toDayKey(today.toISOString()));
 
   useEffect(() => {
-    const saved = loadSession();
-    if (saved?.journeys?.length) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read
-      setJourneys(saved.journeys);
-    }
-    const escalations = loadEscalations();
-    if (Object.keys(escalations).length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read
-      setEscalated(escalations);
-    }
-    setReady(true);
+    let cancelled = false;
+    void (async () => {
+      const saved = await loadSession();
+      if (cancelled) return;
+      if (saved?.journeys?.length) {
+        setJourneys(saved.journeys);
+      }
+      const escalations = await loadEscalations();
+      if (cancelled) return;
+      if (Object.keys(escalations).length > 0) {
+        setEscalated(escalations);
+      }
+      setReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
     if (!ready) return;
-    saveEscalations(escalated);
+    const t = setTimeout(() => void saveEscalations(escalated), 300);
+    return () => clearTimeout(t);
   }, [ready, escalated]);
 
   const entries = useMemo(() => {
@@ -206,7 +213,7 @@ export default function CalendarPage() {
               onClick={() => {
                 const seeded = buildDemoJourneys();
                 setJourneys(seeded);
-                saveSession({ journeys: seeded, messages: [], activeId: seeded[0]?.id });
+                void saveSession({ journeys: seeded, messages: [], activeId: seeded[0]?.id });
               }}
               className="px-4 py-2.5 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white text-sm font-semibold shadow-md hover:opacity-95 transition"
             >

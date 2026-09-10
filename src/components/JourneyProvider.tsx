@@ -69,33 +69,35 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
   /** gate: never persist until the initial restore has been applied */
   const [restored, setRestored] = useState(false);
 
-  /* ---- persistence: the "database" (swap the repository for API calls) ---- */
+  /* ---- persistence: server store via repository (debounced saves) ---- */
   useEffect(() => {
     let cancelled = false;
-    const saved = loadSession();
-    if (saved) {
-      if (saved.journeys?.length) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from storage
-        setJourneys(saved.journeys);
-        // restore the tab the user was on — never silently jump to journeys[0]
-        const valid = saved.activeId && saved.journeys.some((j) => j.id === saved.activeId) ? saved.activeId : saved.journeys[0].id;
-        setActiveId(valid);
+    void (async () => {
+      const saved = await loadSession();
+      if (cancelled) return;
+      if (saved) {
+        if (saved.journeys?.length) {
+          setJourneys(saved.journeys);
+          // restore the tab the user was on — never silently jump to journeys[0]
+          const valid = saved.activeId && saved.journeys.some((j) => j.id === saved.activeId) ? saved.activeId : saved.journeys[0].id;
+          setActiveId(valid);
+        }
+        if (saved.messages) setMessages(saved.messages);
+        if (saved.profile) setProfile(saved.profile);
+        if (saved.docs) setDocs(saved.docs);
       }
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from storage
-      if (saved.messages) setMessages(saved.messages);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from storage
-      if (saved.profile) setProfile(saved.profile);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional one-time hydration from storage
-      if (saved.docs) setDocs(saved.docs);
-    }
-    if (!cancelled) setRestored(true);
+      if (!cancelled) setRestored(true);
+    })();
     return () => {
       cancelled = true;
     };
   }, []);
   useEffect(() => {
     if (!restored) return;
-    saveSession({ journeys, messages, activeId, profile, docs });
+    const t = setTimeout(() => {
+      void saveSession({ journeys, messages, activeId, profile, docs });
+    }, 300);
+    return () => clearTimeout(t);
   }, [restored, journeys, messages, activeId, profile, docs]);
 
   const sendMessage = useCallback(
@@ -280,7 +282,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
   );
 
   const resetDemo = useCallback(() => {
-    clearSession();
+    void clearSession();
     setJourneys([]);
     setMessages([]);
     setActiveId(null);

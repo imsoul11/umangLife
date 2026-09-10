@@ -2,9 +2,10 @@ import type { ChatMessage, CitizenProfile, DigilockerDocument, Journey } from "@
 import type { Locale } from "@/lib/i18n";
 
 /**
- * The ONLY module allowed to touch storage. Today that is localStorage;
- * swapping to a real database means reimplementing these functions as API
- * calls — no caller changes. (DB swap point)
+ * The ONLY module callers use for persistence. Since the server-store commit
+ * this is an API client over /api/session + /api/escalations (backed by
+ * SQLite in src/lib/db.ts); the locale preference stays device-local.
+ * Swapping the backend means changing the route handlers, not this contract.
  */
 
 export interface SessionSnapshot {
@@ -22,8 +23,54 @@ export interface EscalatedRecord {
 
 export type EscalationMap = Record<string, EscalatedRecord>;
 
-const SESSION_KEY = "umanglife-session-v2";
-const GRIEVANCE_KEY = "umanglife-grievances-v1";
+export async function loadSession(): Promise<SessionSnapshot | null> {
+  try {
+    const res = await fetch("/api/session", { cache: "no-store" });
+    if (!res.ok) return null;
+    return (await res.json()) as SessionSnapshot | null;
+  } catch {
+    return null;
+  }
+}
+
+export async function saveSession(snapshot: SessionSnapshot): Promise<void> {
+  try {
+    await fetch("/api/session", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(snapshot),
+    });
+  } catch {
+    // offline / server down — keep working in memory
+  }
+}
+
+export async function clearSession(): Promise<void> {
+  try {
+    await fetch("/api/session", { method: "DELETE" });
+  } catch {}
+}
+
+export async function loadEscalations(): Promise<EscalationMap> {
+  try {
+    const res = await fetch("/api/escalations", { cache: "no-store" });
+    if (!res.ok) return {};
+    return (await res.json()) as EscalationMap;
+  } catch {
+    return {};
+  }
+}
+
+export async function saveEscalations(map: EscalationMap): Promise<void> {
+  try {
+    await fetch("/api/escalations", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(map),
+    });
+  } catch {}
+}
+
 const LOCALE_KEY = "umanglife-locale";
 
 export function loadLocale(): Locale | null {
@@ -37,34 +84,4 @@ export function loadLocale(): Locale | null {
 
 export function saveLocale(locale: Locale): void {
   localStorage.setItem(LOCALE_KEY, locale);
-}
-
-export function loadSession(): SessionSnapshot | null {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? (JSON.parse(raw) as SessionSnapshot) : null;
-  } catch {
-    return null;
-  }
-}
-
-export function saveSession(snapshot: SessionSnapshot): void {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(snapshot));
-}
-
-export function clearSession(): void {
-  localStorage.removeItem(SESSION_KEY);
-}
-
-export function loadEscalations(): EscalationMap {
-  try {
-    const raw = localStorage.getItem(GRIEVANCE_KEY);
-    return raw ? (JSON.parse(raw) as EscalationMap) : {};
-  } catch {
-    return {};
-  }
-}
-
-export function saveEscalations(map: EscalationMap): void {
-  localStorage.setItem(GRIEVANCE_KEY, JSON.stringify(map));
 }

@@ -12,11 +12,14 @@ type Tab = "eligible" | "near" | "all";
 export default function BenefitsPage() {
   const [profile, setProfile] = useState<CitizenProfile>(MOCK_PROFILE);
   useEffect(() => {
-    const saved = loadSession()?.profile;
-    if (saved) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time hydration from storage
-      setProfile(saved);
-    }
+    let cancelled = false;
+    void (async () => {
+      const saved = await loadSession();
+      if (!cancelled && saved?.profile) setProfile(saved.profile);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
   const matches = useMemo(() => matchSchemes(profile, SCHEMES), [profile]);
   const [tab, setTab] = useState<Tab>("eligible");
