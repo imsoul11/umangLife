@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { CalendarEntry, Journey, TaskInstance } from "@/lib/types";
 import { buildCalendar } from "@/lib/engine";
 import { buildDemoJourneys } from "@/data/seed";
@@ -194,7 +195,7 @@ export default function CalendarPage() {
               </button>
             ))}
           </div>
-          <a href="/" className="text-sm text-saffron font-medium hover:underline">← Back</a>
+          <Link href="/" className="text-sm text-saffron font-medium hover:underline">← Back</Link>
         </div>
       </header>
 
@@ -220,7 +221,7 @@ export default function CalendarPage() {
               ✨ Load demo with live applications (one overdue)
             </button>
             <div>
-              <a href="/" className="text-sm text-saffron font-medium hover:underline">← Start a life event journey</a>
+              <Link href="/" className="text-sm text-saffron font-medium hover:underline">← Start a life event journey</Link>
             </div>
           </div>
         ) : view === "month" ? (

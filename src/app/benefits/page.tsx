@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { CitizenProfile, SchemeMatch } from "@/lib/types";
 import { SCHEMES } from "@/data/schemes";
 import { MOCK_PROFILE } from "@/data/mocks";
@@ -42,7 +43,7 @@ export default function BenefitsPage() {
             </p>
           </div>
         </div>
-        <a href="/" className="text-sm text-orange-600 hover:text-orange-700 font-medium">← Back to journeys</a>
+        <Link href="/" className="text-sm text-orange-600 hover:text-orange-700 font-medium">← Back to journeys</Link>
       </header>
 
       <main className="max-w-5xl mx-auto p-4 lg:p-6">

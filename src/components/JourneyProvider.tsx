@@ -100,6 +100,11 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(t);
   }, [restored, journeys, messages, activeId, profile, docs]);
 
+  /* ---- journey creation ceremony (declared before sendMessage uses it) ---- */
+  const [building, setBuilding] = useState(false);
+  const [buildStage, setBuildStage] = useState(0);
+  const pendingJourney = useRef<Journey | null>(null);
+
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || thinking) return;
@@ -152,8 +157,9 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     if (!reveal) return;
     const j = journeys.find((x) => x.id === reveal.journeyId);
     if (!j) {
-      setReveal(null);
-      return;
+      // defer so we never setState synchronously inside the effect body
+      const t = setTimeout(() => setReveal(null), 0);
+      return () => clearTimeout(t);
     }
     if (reveal.n >= j.tasks.length) {
       const t = setTimeout(() => setReveal(null), 0);
@@ -163,10 +169,6 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     return () => clearTimeout(t);
   }, [reveal, journeys]);
 
-  /* ---- journey creation ceremony ---- */
-  const [building, setBuilding] = useState(false);
-  const [buildStage, setBuildStage] = useState(0);
-  const pendingJourney = useRef<Journey | null>(null);
   useEffect(() => {
     if (!building) return;
     if (buildStage >= JOURNEY_BUILD_STAGES) {

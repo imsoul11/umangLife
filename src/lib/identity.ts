@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { AUTH_COOKIE, readAuthSession } from "@/lib/auth";
+import { readAuthSession } from "@/lib/auth";
 
 /**
  * Owner resolution: an authenticated session cookie wins; otherwise an

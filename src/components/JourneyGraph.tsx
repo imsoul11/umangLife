@@ -115,7 +115,7 @@ function JourneyGraphInner({
 
     layers.forEach((layer) => {
       const rowVisible = layer.filter((t) => visible.has(t.id));
-      rowVisible.forEach((task, col) => {
+      rowVisible.forEach((task) => {
         // keep original column layout even while partially revealed
         const origCol = layer.indexOf(task);
         const rowWidth = layer.length * NODE_W + (layer.length - 1) * GAP_X;

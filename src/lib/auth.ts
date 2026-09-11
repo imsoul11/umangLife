@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
+import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { getKv } from "@/lib/db";
 
 const SESSION_TTL_MS = 7 * 86_400_000;

@@ -106,7 +106,7 @@ export default function TaskWizard({
   const [generatedRef, setGeneratedRef] = useState("");
   const [submitStage, setSubmitStage] = useState<number | null>(null);
 
-  const fields = task.formFields ?? [];
+  const fields = useMemo(() => task.formFields ?? [], [task.formFields]);
   const docKinds = useMemo(() => {
     const seen = new Set<string>();
     const out: { icon: string; label: string }[] = [];

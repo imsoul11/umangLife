@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 /**
  * Transparency page — the brief rewards honesty about what is real,
  * what is mocked, and how this could ever touch production safely.
@@ -17,7 +19,7 @@ export default function AboutPage() {
             <p className="text-[11px] text-slate-500">What is real, what is mocked, how it could work safely at scale</p>
           </div>
         </div>
-        <a href="/" className="text-sm text-saffron font-medium hover:underline">← Back to journeys</a>
+        <Link href="/" className="text-sm text-saffron font-medium hover:underline">← Back to journeys</Link>
       </header>
 
       <main className="max-w-3xl mx-auto p-4 lg:p-6 space-y-6">
