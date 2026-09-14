@@ -16,6 +16,11 @@ const en = {
   "status.in_progress": "in progress",
   "status.action_required": "action required",
   "status.done": "done",
+  "chat.error.rate_limit": "You're sending messages too fast — wait a moment and try again.",
+  "chat.error.network": "Network error — check your connection and try again.",
+  "chat.error.server": "The assistant is unavailable right now. Please try again shortly.",
+  "chat.error.retry": "Retry",
+  "chat.error.dismiss": "Dismiss",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -37,6 +42,11 @@ const hi: Record<TranslationKey, string> = {
   "status.in_progress": "चल रहा है",
   "status.action_required": "ध्यान दें",
   "status.done": "पूर्ण",
+  "chat.error.rate_limit": "आप बहुत तेज़ी से संदेश भेज रहे हैं — थोड़ा रुककर फिर कोशिश करें।",
+  "chat.error.network": "नेटवर्क त्रुटि — अपना कनेक्शन जाँचें और फिर कोशिश करें।",
+  "chat.error.server": "सहायक अभी उपलब्ध नहीं है। कृपया थोड़ी देर बाद कोशिश करें।",
+  "chat.error.retry": "फिर कोशिश करें",
+  "chat.error.dismiss": "ठीक है",
 };
 
 const DICT: Record<Locale, Record<TranslationKey, string>> = { en, hi };

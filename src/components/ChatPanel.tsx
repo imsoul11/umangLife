@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ChatAction, ChatMessage } from "@/lib/types";
+import ChatErrorBanner from "@/components/ChatErrorBanner";
 
 export default function ChatPanel({
   messages,
@@ -101,6 +102,8 @@ export default function ChatPanel({
           ))}
         </div>
       )}
+
+      <ChatErrorBanner />
 
       <div className="p-3 border-t border-slate-100 flex gap-2">
         <input

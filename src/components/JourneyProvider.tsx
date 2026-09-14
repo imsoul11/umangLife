@@ -17,6 +17,12 @@ import { computeTaskStatuses } from "@/lib/engine";
 import { clearSession, loadSession, saveSession } from "@/lib/repository";
 import { JOURNEY_BUILD_STAGES, JOURNEY_BUILD_STEP_MS } from "@/components/JourneyBuilder";
 
+export interface ChatError {
+  kind: "rate_limit" | "network" | "server";
+  /** the user message that failed — held for retry */
+  failedMessage: string;
+}
+
 interface JourneyContextValue {
   profile: CitizenProfile;
   setProfile: Dispatch<SetStateAction<CitizenProfile>>;
@@ -27,6 +33,9 @@ interface JourneyContextValue {
   setActiveId: Dispatch<SetStateAction<string | null>>;
   messages: ChatMessage[];
   thinking: boolean;
+  chatError: ChatError | null;
+  retryChat: () => void;
+  dismissChatError: () => void;
   activeTask: TaskInstance | null;
   setActiveTask: Dispatch<SetStateAction<TaskInstance | null>>;
   drafts: Record<string, Record<string, { value: string; source?: string }>>;
@@ -59,6 +68,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [thinking, setThinking] = useState(false);
+  const [chatError, setChatError] = useState<ChatError | null>(null);
   const [activeTask, setActiveTask] = useState<TaskInstance | null>(null);
   const [digiToast, setDigiToast] = useState<{ doc: string; key: number } | null>(null);
   useEffect(() => {
@@ -110,18 +120,28 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
       if (!text.trim() || thinking) return;
       const userMsg: ChatMessage = { role: "user", content: text.trim(), ts: Date.now() };
       const history = messages.slice(-8);
+      setChatError(null);
       setMessages((m) => [...m, userMsg]);
       setThinking(true);
+      /** Roll back the optimistic bubble — the banner holds the text for retry. */
+      const fail = (kind: ChatError["kind"]) => {
+        setMessages((m) => m.filter((x) => x.ts !== userMsg.ts));
+        setChatError({ kind, failedMessage: userMsg.content });
+      };
       try {
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: userMsg.content, profile, journeys, focusedJourneyId: activeId, history, docs }),
         });
+        if (!res.ok) {
+          fail(res.status === 429 ? "rate_limit" : "server");
+          return;
+        }
         const data = await res.json();
         const reply: ChatMessage = {
           role: "assistant",
-          content: data.reply ?? data.error ?? "Something went wrong.",
+          content: data.reply ?? "Something went wrong.",
           ts: Date.now(),
           actions: data.actions,
         };
@@ -135,16 +155,21 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch {
-        setMessages((m) => [
-          ...m,
-          { role: "assistant", content: "Network error — is the dev server running?", ts: Date.now() },
-        ]);
+        fail("network");
       } finally {
         setThinking(false);
       }
     },
     [messages, profile, journeys, activeId, thinking, docs],
   );
+
+  const retryChat = useCallback(() => {
+    const failed = chatError?.failedMessage;
+    if (!failed) return;
+    void sendMessage(failed);
+  }, [chatError, sendMessage]);
+
+  const dismissChatError = useCallback(() => setChatError(null), []);
 
   /** Drafts survive hopping from wizard to chat and back. */
   const [drafts, setDrafts] = useState<Record<string, Record<string, { value: string; source?: string }>>>({});
@@ -300,6 +325,9 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     setActiveId,
     messages,
     thinking,
+    chatError,
+    retryChat,
+    dismissChatError,
     activeTask,
     setActiveTask,
     drafts,
