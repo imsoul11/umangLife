@@ -23,6 +23,7 @@ export async function POST(request: Request) {
       focusedJourneyId: body.focusedJourneyId,
       history: body.history ?? [],
       docs: body.docs,
+      locale: body.locale,
     });
     return NextResponse.json(result);
   } catch (err) {

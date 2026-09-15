@@ -204,6 +204,8 @@ export interface ChatRequest {
    * backward compatibility — the server falls back to its mock set.
    */
   docs?: DigilockerDocument[];
+  /** UI language — the assistant replies in this language (default: en) */
+  locale?: "en" | "hi";
 }
 
 /** POST /api/chat response — exactly one of the branches fills its payload. */

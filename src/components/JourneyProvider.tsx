@@ -16,6 +16,7 @@ import { MOCK_DIGILOCKER_DOCS, MOCK_PROFILE } from "@/data/mocks";
 import { computeTaskStatuses } from "@/lib/engine";
 import { clearSession, loadSession, saveSession } from "@/lib/repository";
 import { JOURNEY_BUILD_STAGES, JOURNEY_BUILD_STEP_MS } from "@/components/JourneyBuilder";
+import { useLocale } from "@/components/LocaleProvider";
 
 export interface ChatError {
   kind: "rate_limit" | "network" | "server";
@@ -62,6 +63,7 @@ export function useJourneys(): JourneyContextValue {
 }
 
 export function JourneyProvider({ children }: { children: ReactNode }) {
+  const { locale } = useLocale();
   const [profile, setProfile] = useState<CitizenProfile>(MOCK_PROFILE);
   const [docs, setDocs] = useState<DigilockerDocument[]>(MOCK_DIGILOCKER_DOCS);
   const [journeys, setJourneys] = useState<Journey[]>([]);
@@ -132,7 +134,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: userMsg.content, profile, journeys, focusedJourneyId: activeId, history, docs }),
+          body: JSON.stringify({ message: userMsg.content, profile, journeys, focusedJourneyId: activeId, history, docs, locale }),
         });
         if (!res.ok) {
           fail(res.status === 429 ? "rate_limit" : "server");
@@ -160,7 +162,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
         setThinking(false);
       }
     },
-    [messages, profile, journeys, activeId, thinking, docs],
+    [messages, profile, journeys, activeId, thinking, docs, locale],
   );
 
   const retryChat = useCallback(() => {

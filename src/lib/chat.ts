@@ -243,13 +243,28 @@ function executeTool(name: string, argsJson: string, req: ChatRequest): ToolOutc
 
 const MAX_TOOL_ROUNDS = 3;
 
+/** Deterministic fallback reply text, localized to the request's locale. */
+const FALLBACK_TEXT = {
+  en: {
+    rephrase: "Sorry, could you rephrase that?",
+    actions: "Here's what you can do right now:",
+    tooManyLookups: "That involved a lot of lookups — try asking again more specifically.",
+  },
+  hi: {
+    rephrase: "क्षमा करें, क्या आप इसे दूसरे शब्दों में बता सकते हैं?",
+    actions: "अभी आप ये कदम उठा सकते हैं:",
+    tooManyLookups: "इसमें बहुत सारे लुकअप हो गए — कृपया और स्पष्ट रूप से पूछें।",
+  },
+} as const;
+
 export async function runChat(req: ChatRequest): Promise<ChatResponse> {
   const { client, model } = getAIClient();
+  const fb = FALLBACK_TEXT[req.locale === "hi" ? "hi" : "en"];
   let detectedJourney: Journey | undefined;
   let pendingActions: ChatAction[] | undefined;
 
   const messages: OpenAI.ChatCompletionMessageParam[] = [
-    { role: "system", content: buildSystemPrompt(req.profile, req.journeys ?? [], req.focusedJourneyId) },
+    { role: "system", content: buildSystemPrompt(req.profile, req.journeys ?? [], req.focusedJourneyId, req.locale) },
     ...req.history.slice(-8).map((m) => ({
       role: m.role,
       content: m.content,
@@ -267,7 +282,7 @@ export async function runChat(req: ChatRequest): Promise<ChatResponse> {
     const msg = res.choices[0]?.message;
     if (!msg?.tool_calls?.length) {
       return {
-        reply: msg?.content ?? "Sorry, could you rephrase that?",
+        reply: msg?.content ?? fb.rephrase,
         detection: detectedJourney
           ? { lifeEvent: detectedJourney.lifeEvent, entities: detectedJourney.entities, journey: detectedJourney }
           : undefined,
@@ -307,7 +322,7 @@ export async function runChat(req: ChatRequest): Promise<ChatResponse> {
       }
       // never re-query the model from a truncated/assistant-ending history
       return {
-        reply: terminalText ?? (pendingActions?.length ? "Here's what you can do right now:" : ""),
+        reply: terminalText ?? (pendingActions?.length ? fb.actions : ""),
         detection: detectedJourney
           ? { lifeEvent: detectedJourney.lifeEvent, entities: detectedJourney.entities, journey: detectedJourney }
           : undefined,
@@ -317,7 +332,7 @@ export async function runChat(req: ChatRequest): Promise<ChatResponse> {
   }
 
   return {
-    reply: "That involved a lot of lookups — try asking again more specifically.",
+    reply: fb.tooManyLookups,
     detection: detectedJourney
       ? { lifeEvent: detectedJourney.lifeEvent, entities: detectedJourney.entities, journey: detectedJourney }
       : undefined,
