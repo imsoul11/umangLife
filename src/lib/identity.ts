@@ -1,9 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { readAuthSession } from "@/lib/auth";
 
 /**
- * Owner resolution: an authenticated session cookie wins; otherwise an
- * anonymous device cookie, minting one when absent.
+ * Owner resolution for the demo: one anonymous, per-browser identity via an
+ * httpOnly device cookie. (Auth was removed — the demo is single-user-per-browser.)
  */
 export interface Owner {
   id: string;
@@ -23,9 +22,6 @@ export function readCookie(request: Request, name: string): string | undefined {
 }
 
 export function resolveOwner(request: Request): Owner {
-  const auth = readAuthSession(readCookie(request, "umang_auth"));
-  if (auth) return { id: `user:${auth.userId}` };
-
   const device = readCookie(request, DEVICE_COOKIE);
   if (device) return { id: `device:${device}` };
   const id = randomUUID();
