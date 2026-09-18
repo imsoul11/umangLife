@@ -7,10 +7,12 @@ import { SCHEMES } from "@/data/schemes";
 import { MOCK_PROFILE } from "@/data/mocks";
 import { matchSchemes } from "@/lib/engine";
 import { loadSession } from "@/lib/repository";
+import { useLocale } from "@/components/LocaleProvider";
 
 type Tab = "eligible" | "near" | "all";
 
 export default function BenefitsPage() {
+  const { t } = useLocale();
   const [profile, setProfile] = useState<CitizenProfile>(MOCK_PROFILE);
   useEffect(() => {
     let cancelled = false;
@@ -36,19 +38,22 @@ export default function BenefitsPage() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-jade to-indigo-ink text-white grid place-items-center font-bold shadow-md">₹</div>
           <div>
-            <h1 className="font-display font-semibold text-indigo-ink text-lg leading-tight tracking-tight">Your Benefit Matches</h1>
+            <h1 className="font-display font-semibold text-indigo-ink text-lg leading-tight tracking-tight">{t("benefits.title")}</h1>
             <p className="text-xs text-slate-500">
-              Deterministic eligibility engine · {eligible.length} of {matches.length} schemes matched ·{" "}
-              {profile.state} resident
+              {t("benefits.subtitle", { e: eligible.length, n: matches.length, s: profile.state })}
             </p>
           </div>
         </div>
-        <Link href="/" className="text-sm text-orange-600 hover:text-orange-700 font-medium">← Back to journeys</Link>
+        <Link href="/" className="text-sm text-orange-600 hover:text-orange-700 font-medium">{t("nav.back")}</Link>
       </header>
 
       <main className="max-w-5xl mx-auto p-4 lg:p-6">
         <div className="flex gap-2 mb-4">
-          {([["eligible", `Eligible (${eligible.length})`], ["near", `Not eligible (${near.length + rest.length})`], ["all", `All schemes (${matches.length})`]] as [Tab, string][]).map(([id, label]) => (
+          {([
+            ["eligible", t("benefits.tab.eligible", { n: eligible.length })],
+            ["near", t("benefits.tab.ineligible", { n: near.length + rest.length })],
+            ["all", t("benefits.tab.all", { n: matches.length })],
+          ] as [Tab, string][]).map(([id, label]) => (
             <button key={id} onClick={() => setTab(id)}
               className={`px-4 py-2 rounded-full text-xs font-medium transition ${
                 tab === id ? "bg-emerald-600 text-white" : "bg-white border border-slate-200 text-slate-600 hover:border-emerald-300"
@@ -65,9 +70,7 @@ export default function BenefitsPage() {
         </div>
 
         <p className="mt-6 text-[11px] text-slate-400 leading-relaxed max-w-3xl">
-          Eligibility is evaluated by a transparent rules engine against published criteria — never by an AI model.
-          Criteria change with budgets; always confirm on the department portal before applying. Sources &amp;
-          last-updated dates shown per scheme.
+          {t("benefits.disclaimer")}
         </p>
       </main>
     </div>
@@ -75,6 +78,7 @@ export default function BenefitsPage() {
 }
 
 function SchemeRow({ m }: { m: SchemeMatch }) {
+  const { t, localeTag } = useLocale();
   const s = m.scheme;
   return (
     <div className={`rounded-xl border p-4 ${m.eligible ? "border-emerald-200 bg-white" : "border-slate-200 bg-slate-50/60 opacity-80"}`}>
@@ -85,12 +89,12 @@ function SchemeRow({ m }: { m: SchemeMatch }) {
         </div>
         <div className="flex items-center gap-1.5">
           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${s.level === "central" ? "bg-indigo-100 text-indigo-700" : "bg-orange-100 text-orange-700"}`}>
-            {s.level === "central" ? "Central" : s.state}
+            {s.level === "central" ? t("benefits.levelCentral") : s.state}
           </span>
           {m.eligible ? (
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-600 text-white">You qualify</span>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-600 text-white">{t("benefits.qualify")}</span>
           ) : (
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-300 text-slate-600">{Math.round(m.score * 100)}% criteria met</span>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-300 text-slate-600">{t("benefits.criteriaMet", { p: Math.round(m.score * 100) })}</span>
           )}
         </div>
       </div>
@@ -103,7 +107,7 @@ function SchemeRow({ m }: { m: SchemeMatch }) {
 
       <details className="mt-2">
         <summary className="text-xs font-medium text-emerald-700 cursor-pointer select-none">
-          {m.eligible ? "Why you qualify" : "Criteria check"} ({m.matchedWhy.length}/{s.criteria.length}) →
+          {m.eligible ? t("benefits.whyQualify", { a: m.matchedWhy.length, b: s.criteria.length }) : t("benefits.criteriaCheck", { a: m.matchedWhy.length, b: s.criteria.length })}
         </summary>
         <ul className="mt-1.5 space-y-1">
           {[...m.matchedWhy.map((w) => ({ t: w, ok: true })), ...m.unmet.map((u) => ({ t: u, ok: false }))].map(({ t, ok }) => (
@@ -115,9 +119,9 @@ function SchemeRow({ m }: { m: SchemeMatch }) {
       </details>
 
       <p className="mt-2 text-[10px] text-slate-400">
-        Source:{" "}
+        {t("benefits.source")}{" "}
         <a href={s.sourceUrl} target="_blank" rel="noreferrer" className="underline hover:text-slate-600">{s.sourceUrl.replace(/^https?:\/\//, "")}</a>
-        {" "}· updated {new Date(s.lastUpdated).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
+        {" "}· {t("benefits.updated", { d: new Date(s.lastUpdated).toLocaleDateString(localeTag, { month: "short", year: "numeric" }) })}
       </p>
     </div>
   );

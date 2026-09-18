@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChatAction, ChatMessage } from "@/lib/types";
 import ChatErrorBanner from "@/components/ChatErrorBanner";
+import { useLocale } from "@/components/LocaleProvider";
 
 export default function ChatPanel({
   messages,
@@ -20,6 +21,7 @@ export default function ChatPanel({
   scopeLabel?: string;
 }) {
   const [input, setInput] = useState("");
+  const { t } = useLocale();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,21 +38,21 @@ export default function ChatPanel({
     <div className="h-full flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden">
       <div className="px-4 py-3 border-b border-slate-100">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-slate-800">Assistant</h3>
+          <h3 className="text-sm font-semibold text-slate-800">{t("chat.title")}</h3>
           {scopeLabel && (
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">
-              focused: {scopeLabel}
+              {t("chat.focused", { s: scopeLabel })}
             </span>
           )}
         </div>
-        <p className="text-[11px] text-slate-500">One advisor · knows all your journeys</p>
+        <p className="text-[11px] text-slate-500">{t("chat.subtitle")}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px] lg:min-h-0">
         {messages.length === 0 && (
           <div className="text-center text-sm text-slate-600 pt-10 space-y-2">
             <p className="text-3xl">💬</p>
-            <p>Try: &ldquo;I bought a second-hand car&rdquo;</p>
+            <p>{t("chat.try")}</p>
           </div>
         )}
         {messages.map((m, i) => (
@@ -82,7 +84,7 @@ export default function ChatPanel({
         {thinking && (
           <div className="flex justify-start">
             <div className="bg-slate-100 border border-slate-300 text-slate-700 px-4 py-2.5 rounded-2xl rounded-bl-md text-sm">
-              <span className="animate-pulse">thinking…</span>
+              <span className="animate-pulse">{t("chat.thinking")}</span>
             </div>
           </div>
         )}
@@ -110,7 +112,7 @@ export default function ChatPanel({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="What happened in your life?"
+          placeholder={t("chat.placeholder")}
           className="flex-1 text-sm text-slate-900 bg-white placeholder:text-slate-500 px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
           disabled={thinking}
         />
@@ -119,7 +121,7 @@ export default function ChatPanel({
           disabled={thinking || !input.trim()}
           className="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-sm font-medium transition"
         >
-          Send
+          {t("chat.send")}
         </button>
       </div>
     </div>

@@ -6,6 +6,7 @@ import type { CalendarEntry, Journey, TaskInstance } from "@/lib/types";
 import { buildCalendar } from "@/lib/engine";
 import { buildDemoJourneys } from "@/data/seed";
 import { loadEscalations, loadSession, saveEscalations, saveSession, type EscalatedRecord } from "@/lib/repository";
+import { useLocale } from "@/components/LocaleProvider";
 
 interface GrievanceState {
   entry: CalendarEntry;
@@ -50,6 +51,7 @@ const SEV_CLASS = {
 } as const;
 
 export default function CalendarPage() {
+  const { t, localeTag } = useLocale();
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [grievance, setGrievance] = useState<GrievanceState | null>(null);
   const [ready, setReady] = useState(false);
@@ -165,8 +167,8 @@ export default function CalendarPage() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white grid place-items-center font-bold shadow-md">📅</div>
           <div>
-            <h1 className="font-display font-semibold text-indigo-ink text-lg leading-tight tracking-tight">My Government Calendar</h1>
-            <p className="text-[11px] text-slate-500">Every filed application, its decision deadline, and your escalation path</p>
+            <h1 className="font-display font-semibold text-indigo-ink text-lg leading-tight tracking-tight">{t("calendar.title")}</h1>
+            <p className="text-[11px] text-slate-500">{t("calendar.subtitle")}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -174,7 +176,7 @@ export default function CalendarPage() {
             <div className="flex items-center gap-1 text-sm">
               <button onClick={() => setCursor((c) => (c.m === 0 ? { y: c.y - 1, m: 11 } : { y: c.y, m: c.m - 1 }))} className="w-7 h-7 grid place-items-center rounded-lg border border-slate-200 hover:border-saffron text-slate-600">←</button>
               <span className="w-28 text-center font-medium text-slate-800">
-                {new Date(cursor.y, cursor.m, 1).toLocaleDateString("en-IN", { month: "long", year: "numeric" })}
+                {new Date(cursor.y, cursor.m, 1).toLocaleDateString(localeTag, { month: "long", year: "numeric" })}
               </span>
               <button onClick={() => setCursor((c) => (c.m === 11 ? { y: c.y + 1, m: 0 } : { y: c.y, m: c.m + 1 }))} className="w-7 h-7 grid place-items-center rounded-lg border border-slate-200 hover:border-saffron text-slate-600">→</button>
               <button
@@ -184,32 +186,32 @@ export default function CalendarPage() {
                 }}
                 className="ml-1 px-2.5 py-1 rounded-lg text-xs border border-slate-200 text-slate-600 hover:border-saffron"
               >
-                Today
+                {t("calendar.today")}
               </button>
             </div>
           )}
           <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs">
             {(["month", "timeline"] as View[]).map((v) => (
               <button key={v} onClick={() => setView(v)} className={`px-3 py-1.5 font-medium ${view === v ? "bg-indigo-ink text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`}>
-                {v === "month" ? "Month" : "Timeline"}
+                {v === "month" ? t("calendar.month") : t("calendar.timeline")}
               </button>
             ))}
           </div>
-          <Link href="/" className="text-sm text-saffron font-medium hover:underline">← Back</Link>
+          <Link href="/" className="text-sm text-saffron font-medium hover:underline">{t("calendar.back")}</Link>
         </div>
       </header>
 
       <main className="max-w-5xl mx-auto p-4 lg:p-6 space-y-4">
         {urgentCount > 0 && (
           <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 anim-rise">
-            🚨 <b>{urgentCount} application{urgentCount !== 1 ? "s" : ""}</b> past the expected decision date — consider escalating below.
+            {t("calendar.urgentBanner", { n: urgentCount })}
           </div>
         )}
 
         {journeys.length === 0 ? (
           <div className="text-center py-16 space-y-4">
             <p className="text-4xl">📅</p>
-            <p className="text-slate-600 font-medium">No active applications to track yet.</p>
+            <p className="text-slate-600 font-medium">{t("calendar.empty")}</p>
             <button
               onClick={() => {
                 const seeded = buildDemoJourneys();
@@ -218,10 +220,10 @@ export default function CalendarPage() {
               }}
               className="px-4 py-2.5 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white text-sm font-semibold shadow-md hover:opacity-95 transition"
             >
-              ✨ Load demo with live applications (one overdue)
+              {t("calendar.loadDemo")}
             </button>
             <div>
-              <Link href="/" className="text-sm text-saffron font-medium hover:underline">← Start a life event journey</Link>
+              <Link href="/" className="text-sm text-saffron font-medium hover:underline">{t("calendar.startJourney")}</Link>
             </div>
           </div>
         ) : view === "month" ? (

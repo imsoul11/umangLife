@@ -1,13 +1,15 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { translate, type Locale, type TranslationKey } from "@/lib/i18n";
+import { translate, translateWith, localeTag, type Locale, type TranslationKey } from "@/lib/i18n";
 import { loadLocale, saveLocale } from "@/lib/repository";
 
 interface LocaleContextValue {
   locale: Locale;
   setLocale: (l: Locale) => void;
-  t: (key: TranslationKey) => string;
+  t: (key: TranslationKey, vars?: Record<string, string | number>) => string;
+  /** BCP-47 tag for Date.toLocaleDateString, e.g. "hi-IN" */
+  localeTag: string;
 }
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
@@ -28,9 +30,14 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     saveLocale(l);
   };
 
-  const t = (key: TranslationKey) => translate(locale, key);
+  const t = (key: TranslationKey, vars?: Record<string, string | number>) =>
+    vars ? translateWith(locale, key, vars) : translate(locale, key);
 
-  return <LocaleContext.Provider value={{ locale, setLocale, t }}>{children}</LocaleContext.Provider>;
+  return (
+    <LocaleContext.Provider value={{ locale, setLocale, t, localeTag: localeTag(locale) }}>
+      {children}
+    </LocaleContext.Provider>
+  );
 }
 
 export function useLocale(): LocaleContextValue {

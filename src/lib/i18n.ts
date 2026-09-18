@@ -21,6 +21,36 @@ const en = {
   "chat.error.server": "The assistant is unavailable right now. Please try again shortly.",
   "chat.error.retry": "Retry",
   "chat.error.dismiss": "Dismiss",
+  "chat.title": "Assistant",
+  "chat.subtitle": "One advisor · knows all your journeys",
+  "chat.focused": "focused: {s}",
+  "chat.try": "Try: “I bought a second-hand car”",
+  "chat.placeholder": "What happened in your life?",
+  "chat.send": "Send",
+  "chat.thinking": "thinking…",
+  "nav.back": "← Back to journeys",
+  "benefits.title": "Your Benefit Matches",
+  "benefits.subtitle": "Deterministic eligibility engine · {e} of {n} schemes matched · {s} resident",
+  "benefits.tab.eligible": "Eligible ({n})",
+  "benefits.tab.ineligible": "Not eligible ({n})",
+  "benefits.tab.all": "All schemes ({n})",
+  "benefits.qualify": "You qualify",
+  "benefits.criteriaMet": "{p}% criteria met",
+  "benefits.whyQualify": "Why you qualify ({a}/{b}) →",
+  "benefits.criteriaCheck": "Criteria check ({a}/{b}) →",
+  "benefits.source": "Source:",
+  "benefits.updated": "updated {d}",
+  "benefits.levelCentral": "Central",
+  "benefits.disclaimer": "Eligibility is evaluated by a transparent rules engine against published criteria — never by an AI model. Criteria change with budgets; always confirm on the department portal before applying. Sources & last-updated dates shown per scheme.",
+  "calendar.subtitle": "Every filed application, its decision deadline, and your escalation path",
+  "calendar.month": "Month",
+  "calendar.timeline": "Timeline",
+  "calendar.today": "Today",
+  "calendar.back": "← Back",
+  "calendar.urgentBanner": "🚨 {n} application(s) past the expected decision date — consider escalating below.",
+  "calendar.empty": "No active applications to track yet.",
+  "calendar.loadDemo": "✨ Load demo with live applications (one overdue)",
+  "calendar.startJourney": "← Start a life event journey",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -47,10 +77,54 @@ const hi: Record<TranslationKey, string> = {
   "chat.error.server": "सहायक अभी उपलब्ध नहीं है। कृपया थोड़ी देर बाद कोशिश करें।",
   "chat.error.retry": "फिर कोशिश करें",
   "chat.error.dismiss": "ठीक है",
+  "chat.title": "सहायक",
+  "chat.subtitle": "एक सलाहकार · आपकी सभी जर्नी जानता है",
+  "chat.focused": "केंद्रित: {s}",
+  "chat.try": "आज़माएँ: “मैंने एक पुरानी कार खरीदी”",
+  "chat.placeholder": "आपकी ज़िंदगी में क्या हुआ?",
+  "chat.send": "भेजें",
+  "chat.thinking": "सोच रहा हूँ…",
+  "nav.back": "← जर्नी पर वापस",
+  "benefits.title": "आपकी योजना पात्रताएँ",
+  "benefits.subtitle": "पारदर्शी पात्रता इंजन · {n} में से {e} योजनाएँ पात्र · {s} निवासी",
+  "benefits.tab.eligible": "पात्र ({n})",
+  "benefits.tab.ineligible": "पात्र नहीं ({n})",
+  "benefits.tab.all": "सभी योजनाएँ ({n})",
+  "benefits.qualify": "आप पात्र हैं",
+  "benefits.criteriaMet": "{p}% शर्तें पूरी",
+  "benefits.whyQualify": "आप क्यों पात्र हैं ({a}/{b}) →",
+  "benefits.criteriaCheck": "शर्तों की जाँच ({a}/{b}) →",
+  "benefits.source": "स्रोत:",
+  "benefits.updated": "अपडेट: {d}",
+  "benefits.levelCentral": "केंद्रीय",
+  "benefits.disclaimer": "पात्रता का मूल्यांकन एक पारदर्शी नियम-इंजन प्रकाशित मानदंडों के आधार पर करता है — कभी भी AI मॉडल द्वारा नहीं। मानदंड बजट के साथ बदलते रहते हैं; आवेदन से पहले विभाग के पोर्टल पर पुष्टि कर लें। प्रत्येक योजना के साथ स्रोत और अंतिम अपडेट तिथि दिखाई गई है।",
+  "calendar.subtitle": "हर दाख़िल आवेदन, उसकी निर्णय तिथि और आपका शिकायत मार्ग",
+  "calendar.month": "महीना",
+  "calendar.timeline": "टाइमलाइन",
+  "calendar.today": "आज",
+  "calendar.back": "← वापस",
+  "calendar.urgentBanner": "🚨 {n} आवेदन अपेक्षित निर्णय तिथि से आगे हैं — नीचे शिकायत दर्ज करें।",
+  "calendar.empty": "ट्रैक करने के लिए कोई सक्रिय आवेदन नहीं।",
+  "calendar.loadDemo": "✨ लाइव आवेदनों के साथ डेमो लोड करें (एक overdue)",
+  "calendar.startJourney": "← जीवन-घटना जर्नी शुरू करें",
 };
 
 const DICT: Record<Locale, Record<TranslationKey, string>> = { en, hi };
 
 export function translate(locale: Locale, key: TranslationKey): string {
   return DICT[locale][key] ?? en[key];
+}
+
+/** translate with {var} interpolation, e.g. tf("benefits.tab.eligible", { n: 5 }) */
+export function translateWith(
+  locale: Locale,
+  key: TranslationKey,
+  vars: Record<string, string | number>,
+): string {
+  return translate(locale, key).replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
+}
+
+/** Locale-aware date formatting (en-IN / hi-IN). */
+export function localeTag(locale: Locale): string {
+  return locale === "hi" ? "hi-IN" : "en-IN";
 }
