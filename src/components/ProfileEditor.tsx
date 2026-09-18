@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { CitizenProfile, DocType } from "@/lib/types";
 import { useJourneys } from "@/components/JourneyProvider";
+import { useLocale } from "@/components/LocaleProvider";
 
 const ALL_DOC_TYPES: { type: DocType; label: string }[] = [
   { type: "AADHAAR", label: "Aadhaar" },
@@ -22,8 +23,11 @@ const inputCls = "px-3 py-2 rounded-xl border border-slate-300 text-sm focus:out
 
 export default function ProfileEditor({ onClose }: { onClose: () => void }) {
   const { profile, setProfile, docs, setDocs } = useJourneys();
+  const { t } = useLocale();
   const [newDocType, setNewDocType] = useState<DocType | "">("");
   const [newDocIssuer, setNewDocIssuer] = useState("");
+  const [newChildAge, setNewChildAge] = useState("");
+  const [newChildGender, setNewChildGender] = useState<"male" | "female">("female");
 
   function patch(p: Partial<CitizenProfile>) {
     setProfile((prev) => ({ ...prev, ...p }));
@@ -31,6 +35,24 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
 
   const present = new Set(docs.map((d) => d.type));
   const addable = ALL_DOC_TYPES.filter((t) => !present.has(t.type));
+
+  function updateChild(idx: number, age: number) {
+    setProfile((prev) => ({
+      ...prev,
+      children: prev.children.map((c, i) => (i === idx ? { ...c, age } : c)),
+    }));
+  }
+
+  function removeChild(idx: number) {
+    setProfile((prev) => ({ ...prev, children: prev.children.filter((_, i) => i !== idx) }));
+  }
+
+  function addChild() {
+    const age = Number(newChildAge);
+    if (Number.isNaN(age) || age < 0) return;
+    setProfile((prev) => ({ ...prev, children: [...prev.children, { age, gender: newChildGender }] }));
+    setNewChildAge("");
+  }
 
   function addDoc() {
     if (!newDocType) return;
@@ -99,6 +121,59 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
                   {label}
                 </label>
               ))}
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <h4 className="text-xs font-medium text-slate-600">{t("profile.children", { n: profile.children.length })}</h4>
+              <ul className="space-y-1.5">
+                {profile.children.map((c, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <label className="inline-flex items-center gap-1.5 text-sm text-slate-700">
+                      <span className="text-xs text-slate-500">{t("profile.childAge")}</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={c.age}
+                        onChange={(e) => updateChild(i, Number(e.target.value) || 0)}
+                        className="w-16 px-2 py-1.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-orange-500"
+                      />
+                    </label>
+                    <span className="text-sm text-slate-600">{c.gender === "female" ? t("profile.girl") : t("profile.boy")}</span>
+                    <button
+                      onClick={() => removeChild(i)}
+                      className="ml-auto text-xs text-slate-400 hover:text-red-600 underline"
+                    >
+                      remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  placeholder={t("profile.childAge")}
+                  value={newChildAge}
+                  onChange={(e) => setNewChildAge(e.target.value)}
+                  className="w-20 px-2 py-1.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-orange-500"
+                />
+                <select
+                  value={newChildGender}
+                  onChange={(e) => setNewChildGender(e.target.value as "male" | "female")}
+                  className="px-2 py-1.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-orange-500"
+                >
+                  <option value="female">{t("profile.girl")}</option>
+                  <option value="male">{t("profile.boy")}</option>
+                </select>
+                <button
+                  onClick={addChild}
+                  className="text-xs font-medium px-3 py-1.5 rounded-full border border-orange-300 text-orange-700 hover:bg-orange-50 transition disabled:opacity-40"
+                  disabled={newChildAge === ""}
+                >
+                  {t("profile.addChild")}
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-400">Child-based schemes (Sukanya Samriddhi, NPS Vatsalya…) react instantly to these values.</p>
             </div>
           </section>
 

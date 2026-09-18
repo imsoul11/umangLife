@@ -51,6 +51,11 @@ const en = {
   "calendar.empty": "No active applications to track yet.",
   "calendar.loadDemo": "✨ Load demo with live applications (one overdue)",
   "calendar.startJourney": "← Start a life event journey",
+  "profile.children": "Children ({n})",
+  "profile.childAge": "Age",
+  "profile.girl": "Girl",
+  "profile.boy": "Boy",
+  "profile.addChild": "Add child",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -107,6 +112,11 @@ const hi: Record<TranslationKey, string> = {
   "calendar.empty": "ट्रैक करने के लिए कोई सक्रिय आवेदन नहीं।",
   "calendar.loadDemo": "✨ लाइव आवेदनों के साथ डेमो लोड करें (एक overdue)",
   "calendar.startJourney": "← जीवन-घटना जर्नी शुरू करें",
+  "profile.children": "बच्चे ({n})",
+  "profile.childAge": "उम्र",
+  "profile.girl": "बेटी",
+  "profile.boy": "बेटा",
+  "profile.addChild": "बच्चा जोड़ें",
 };
 
 const DICT: Record<Locale, Record<TranslationKey, string>> = { en, hi };
