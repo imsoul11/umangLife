@@ -12,6 +12,7 @@ import EmptyState, { SAMPLE_PROMPTS } from "@/components/EmptyState";
 import ProgressCard from "@/components/ProgressCard";
 import CalendarStrip from "@/components/CalendarStrip";
 import ProfileEditor from "@/components/ProfileEditor";
+import SlaBanner from "@/components/SlaBanner";
 import { JourneyProvider, useJourneys } from "@/components/JourneyProvider";
 
 function DashboardInner() {
@@ -56,6 +57,8 @@ function DashboardInner() {
 
       <main className="max-w-7xl mx-auto p-4 lg:p-6 grid lg:grid-cols-[1fr_400px] gap-4 lg:gap-6">
         <section className="space-y-4 min-w-0">
+          <SlaBanner />
+
           {/* Welcome back — reconstructed entirely from persisted state */}
           {!building && journeys.length > 1 && (
             <div className="flex gap-2 overflow-x-auto pb-1">

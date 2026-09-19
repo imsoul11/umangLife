@@ -56,6 +56,9 @@ const en = {
   "profile.girl": "Girl",
   "profile.boy": "Boy",
   "profile.addChild": "Add child",
+  "sla.banner": "🚨 {n} application(s) past the expected decision date.",
+  "sla.review": "Review deadlines",
+  "sla.dismiss": "Dismiss for today",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -117,6 +120,9 @@ const hi: Record<TranslationKey, string> = {
   "profile.girl": "बेटी",
   "profile.boy": "बेटा",
   "profile.addChild": "बच्चा जोड़ें",
+  "sla.banner": "🚨 {n} आवेदन अपेक्षित निर्णय तिथि से आगे हैं।",
+  "sla.review": "समय-सीमाएँ देखें",
+  "sla.dismiss": "आज के लिए हटाएँ",
 };
 
 const DICT: Record<Locale, Record<TranslationKey, string>> = { en, hi };

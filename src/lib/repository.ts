@@ -85,3 +85,20 @@ export function loadLocale(): Locale | null {
 export function saveLocale(locale: Locale): void {
   localStorage.setItem(LOCALE_KEY, locale);
 }
+
+const SLA_BANNER_KEY = "umanglife-sla-banner-dismissed";
+
+/** Day key (YYYY-MM-DD) the urgent-SLA banner was dismissed for; re-appears next day. */
+export function loadSlaBannerDismissedDay(): string | null {
+  try {
+    return localStorage.getItem(SLA_BANNER_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function saveSlaBannerDismissedDay(day: string): void {
+  try {
+    localStorage.setItem(SLA_BANNER_KEY, day);
+  } catch {}
+}
