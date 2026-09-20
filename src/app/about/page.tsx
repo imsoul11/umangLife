@@ -67,11 +67,14 @@ export default function AboutPage() {
             <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
               <h3 className="text-sm font-semibold text-emerald-800 flex items-center gap-1.5">✓ Real — the product logic</h3>
               <ul className="mt-2 space-y-1 text-xs text-emerald-900/80">
-                <li>Life-event detection &amp; entity extraction</li>
+                <li>Life-event detection & entity extraction</li>
                 <li>Dependency-aware task graphs (DAG), validated against real process rules</li>
                 <li>Deterministic eligibility engine with explainable “why”</li>
                 <li>Urgency scoring, SLA calendar and overdue detection</li>
                 <li>The citizen consent + verify flow</li>
+                <li>Server-side persistence (SQLite) behind an anonymous device cookie</li>
+                <li>Hindi/English interface — toggle it in the header, the assistant replies in kind</li>
+                <li>Rate-limited AI endpoints and validated chat action buttons</li>
               </ul>
             </div>
             <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
@@ -94,6 +97,16 @@ export default function AboutPage() {
             <li className="flex gap-2"><span>🔐</span> Documents are pulled only per-purpose, after explicit consent, and only for the fields that form needs — mirroring the existing DigiLocker consent model.</li>
             <li className="flex gap-2"><span>🔁</span> Exchanging DigiLocker/EPFO/CP Data for their real, documented APIs is a drop-in: the engines only speak to lightweight interfaces, so a production adapter swaps in without rewriting the journey logic.</li>
             <li className="flex gap-2"><span>🧩</span> No LLM decides what you&apos;re owed. Every journey, dependency, eligibility and grievance is generated from curated, versioned, human-verified rules — the LLM only understands language and routes to those rules.</li>
+          </ul>
+        </section>
+
+        {/* data */}
+        <section className="bg-white rounded-2xl border border-slate-200 p-6">
+          <h2 className="font-display text-lg font-semibold text-indigo-ink">Where your data lives</h2>
+          <ul className="mt-3 space-y-2 text-sm text-slate-600">
+            <li className="flex gap-2"><span>🗄️</span> Journeys, chat history, your profile and document list are stored server-side in a local SQLite file, keyed by an anonymous device cookie — no accounts and no personal data required.</li>
+            <li className="flex gap-2"><span>🧹</span> “reset demo” in the header wipes your device’s stored data; deleting the <code className="text-xs bg-slate-100 px-1 rounded">.data/umang.db</code> file resets everything.</li>
+            <li className="flex gap-2"><span>🌐</span> Nothing here is production data: every document, portal response and reference number is synthetic, and none of it leaves your machine.</li>
           </ul>
         </section>
 
