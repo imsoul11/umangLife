@@ -14,6 +14,7 @@ import CalendarStrip from "@/components/CalendarStrip";
 import ProfileEditor from "@/components/ProfileEditor";
 import SlaBanner from "@/components/SlaBanner";
 import { JourneyProvider, useJourneys } from "@/components/JourneyProvider";
+import { useLocale } from "@/components/LocaleProvider";
 
 function DashboardInner() {
   const {
@@ -39,7 +40,9 @@ function DashboardInner() {
     handleAskAi,
     markFetched,
     resetDemo,
+    deleteJourney,
   } = useJourneys();
+  const { t } = useLocale();
   const [editorOpen, setEditorOpen] = useState(false);
 
   const activeJourney = journeys.find((j) => j.id === activeId) ?? null;
@@ -66,12 +69,23 @@ function DashboardInner() {
                 const st = computeTaskStatuses(j, docs);
                 const done = st.filter((t) => t.status === "done").length;
                 return (
-                  <button key={j.id} onClick={() => setActiveId(j.id)}
-                    className={`shrink-0 px-3.5 py-2 rounded-full text-xs font-medium border transition ${
-                      j.id === activeId ? "bg-orange-600 text-white border-orange-600" : "bg-white text-slate-600 border-slate-200 hover:border-orange-300"
-                    }`}>
-                    {j.emoji} {j.title.replace(" Journey", "")} · {done}/{st.length}
-                  </button>
+                  <div key={j.id} className="flex shrink-0 items-center gap-0.5">
+                    <button onClick={() => setActiveId(j.id)}
+                      className={`px-3.5 py-2 rounded-full text-xs font-medium border transition ${
+                        j.id === activeId ? "bg-orange-600 text-white border-orange-600" : "bg-white text-slate-600 border-slate-200 hover:border-orange-300"
+                      }`}>
+                      {j.emoji} {j.title.replace(" Journey", "")} · {done}/{st.length}
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm(t("journey.deleteConfirm"))) deleteJourney(j.id);
+                      }}
+                      title={t("journey.delete")}
+                      className="w-6 h-6 grid place-items-center rounded-full text-slate-300 hover:text-red-600 hover:bg-red-50 transition text-xs"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -83,7 +97,15 @@ function DashboardInner() {
             <EmptyState onPrompt={sendMessage} />
           ) : (
             <>
-              <ProgressCard journey={activeJourney} progress={progress} done={doneCount} total={activeTasks.length} />
+              <ProgressCard
+                journey={activeJourney}
+                progress={progress}
+                done={doneCount}
+                total={activeTasks.length}
+                onDelete={() => {
+                  if (window.confirm(t("journey.deleteConfirm"))) deleteJourney(activeJourney.id);
+                }}
+              />
               {calendar.length > 0 && <CalendarStrip entries={calendar} />}
               <JourneyGraph
                 tasks={activeTasks}

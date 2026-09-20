@@ -59,6 +59,8 @@ const en = {
   "sla.banner": "🚨 {n} application(s) past the expected decision date.",
   "sla.review": "Review deadlines",
   "sla.dismiss": "Dismiss for today",
+  "journey.delete": "Delete journey",
+  "journey.deleteConfirm": "Delete this journey and its tasks? Chat history is kept.",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -123,6 +125,8 @@ const hi: Record<TranslationKey, string> = {
   "sla.banner": "🚨 {n} आवेदन अपेक्षित निर्णय तिथि से आगे हैं।",
   "sla.review": "समय-सीमाएँ देखें",
   "sla.dismiss": "आज के लिए हटाएँ",
+  "journey.delete": "जर्नी हटाएँ",
+  "journey.deleteConfirm": "इस जर्नी और उसके कार्यों को हटाएँ? चैट इतिहास बना रहेगा।",
 };
 
 const DICT: Record<Locale, Record<TranslationKey, string>> = { en, hi };

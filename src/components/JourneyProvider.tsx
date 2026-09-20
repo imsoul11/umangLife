@@ -48,6 +48,7 @@ interface JourneyContextValue {
   reveal: { journeyId: string; n: number } | null;
   sendMessage: (text: string) => Promise<void>;
   completeTask: (journeyId: string, taskId: string, submitOnly: boolean, ref?: string, snapshot?: Record<string, string>) => void;
+  deleteJourney: (journeyId: string) => void;
   handleChatAction: (a: ChatAction) => void;
   handleAskAi: (fieldLabel: string, taskTitle: string) => void;
   markFetched: (id: string) => void;
@@ -284,6 +285,19 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     [journeys, docs],
   );
 
+  /** Removes one journey; falls back to the next tab and closes its wizard. */
+  const deleteJourney = useCallback(
+    (journeyId: string) => {
+      const next = journeys.filter((j) => j.id !== journeyId);
+      if (journeys.length === next.length) return;
+      const owner = journeys.find((j) => j.id === journeyId);
+      if (activeTask && owner?.tasks.some((t) => t.id === activeTask.id)) setActiveTask(null);
+      setJourneys(next);
+      if (journeyId === activeId) setActiveId(next[0]?.id ?? null);
+    },
+    [journeys, activeId, activeTask],
+  );
+
   /** Field-level "Ask AI" — hop to chat with a grounded question; draft is kept. */
   const handleAskAi = useCallback(
     (fieldLabel: string, taskTitle: string) => {
@@ -341,6 +355,7 @@ export function JourneyProvider({ children }: { children: ReactNode }) {
     reveal,
     sendMessage,
     completeTask,
+    deleteJourney,
     handleChatAction,
     handleAskAi,
     markFetched,
