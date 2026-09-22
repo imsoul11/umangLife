@@ -31,6 +31,7 @@ Other scripts:
 
 ```bash
 npm test       # vitest unit tests (engine, prompts, repository, rate limiting, kv store)
+npm run e2e    # playwright e2e over the real app (chat is mocked — no API key needed)
 npm run smoke  # end-to-end sanity of the deterministic engine + eligibility
 npm run build  # production build
 ```
@@ -71,7 +72,7 @@ src/
 - [ ] SLA deadline notifications beyond the in-app banner (email digest)
 - [ ] Real DigiLocker / government API sandboxes to replace mocks
 - [ ] More languages beyond Hindi
-- [ ] E2E tests (Playwright) over the chat → journey → complete-task flow
+- [x] E2E tests (Playwright) over the chat → journey → complete-task flow
 
 ## Demo reset
 

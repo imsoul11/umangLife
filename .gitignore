@@ -42,3 +42,7 @@ next-env.d.ts
 
 # local SQLite data store
 .data/
+
+# playwright
+test-results/
+playwright-report/
