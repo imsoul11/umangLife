@@ -8,7 +8,7 @@ import JourneyBuilder from "@/components/JourneyBuilder";
 import JourneyGraph from "@/components/JourneyGraph";
 import ChatPanel from "@/components/ChatPanel";
 import DashboardHeader from "@/components/DashboardHeader";
-import EmptyState, { SAMPLE_PROMPTS } from "@/components/EmptyState";
+import EmptyState from "@/components/EmptyState";
 import ProgressCard from "@/components/ProgressCard";
 import CalendarStrip from "@/components/CalendarStrip";
 import ProfileEditor from "@/components/ProfileEditor";
@@ -117,7 +117,7 @@ function DashboardInner() {
         </section>
 
         <section className="lg:h-[calc(100vh-96px)] lg:sticky lg:top-6">
-          <ChatPanel messages={messages} thinking={thinking} onSend={sendMessage} onAction={handleChatAction} samples={journeys.length === 0 ? SAMPLE_PROMPTS.slice(0, 2) : []} scopeLabel={activeJourney ? `${activeJourney.emoji} ${activeJourney.title.replace(" Journey", "")}` : journeys.length ? `${journeys.length} journeys` : undefined} />
+          <ChatPanel messages={messages} thinking={thinking} onSend={sendMessage} onAction={handleChatAction} samples={journeys.length === 0 ? [t("sample.job"), t("sample.vehicle")] : []}scopeLabel={activeJourney ? `${activeJourney.emoji} ${activeJourney.title.replace(" Journey", "")}` : journeys.length ? `${journeys.length} journeys` : undefined} />
         </section>
       </main>
 
