@@ -49,5 +49,10 @@ test("mocked life-event detection builds a journey graph and opens the wizard", 
 
   // click the unlocked root task → wizard modal opens
   await page.getByText("Verify identity").first().click();
-  await expect(page.locator("div.fixed.inset-0").first()).toBeVisible();
+  const wizard = page.locator("div.fixed.inset-0").first();
+  await expect(wizard).toBeVisible();
+
+  // Escape closes the wizard (modal a11y)
+  await page.keyboard.press("Escape");
+  await expect(wizard).not.toBeVisible();
 });

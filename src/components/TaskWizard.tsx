@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CitizenProfile, DigilockerDocument, LifeEventEntities, TaskInstance } from "@/lib/types";
 import { resolveSource } from "@/lib/sources";
+import { useEscapeClose } from "@/components/useEscapeClose";
 import StatusBadge from "./StatusBadge";
 
 type Values = Record<string, { value: string; source?: string }>;
@@ -161,10 +162,11 @@ export default function TaskWizard({
   }
 
   const justSubmitted = step === 2;
+  useEscapeClose(onClose);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden anim-pop" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-label={task.title} className="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden anim-pop" onClick={(e) => e.stopPropagation()}>
         {/* header */}
         <div className="px-6 pt-5 pb-4 border-b border-slate-100">
           <div className="flex items-start justify-between gap-4">

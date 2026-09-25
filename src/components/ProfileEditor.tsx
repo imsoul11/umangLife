@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { CitizenProfile, DocType } from "@/lib/types";
 import { useJourneys } from "@/components/JourneyProvider";
 import { useLocale } from "@/components/LocaleProvider";
+import { useEscapeClose } from "@/components/useEscapeClose";
 
 const ALL_DOC_TYPES: { type: DocType; label: string }[] = [
   { type: "AADHAAR", label: "Aadhaar" },
@@ -28,6 +29,7 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
   const [newDocIssuer, setNewDocIssuer] = useState("");
   const [newChildAge, setNewChildAge] = useState("");
   const [newChildGender, setNewChildGender] = useState<"male" | "female">("female");
+  useEscapeClose(onClose);
 
   function patch(p: Partial<CitizenProfile>) {
     setProfile((prev) => ({ ...prev, ...p }));
@@ -67,6 +69,9 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Profile and DigiLocker documents"
         className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
