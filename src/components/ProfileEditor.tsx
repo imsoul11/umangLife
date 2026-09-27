@@ -28,7 +28,6 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
   const [newDocType, setNewDocType] = useState<DocType | "">("");
   const [newDocIssuer, setNewDocIssuer] = useState("");
   const [newChildAge, setNewChildAge] = useState("");
-  const [newChildAge, setNewChildAge] = useState("");
   const [newChildGender, setNewChildGender] = useState<"male" | "female">("female");
   const [importError, setImportError] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -93,12 +92,6 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
     setProfile((prev) => ({ ...prev, children: prev.children.filter((_, i) => i !== idx) }));
   }
 
-  function addChild() {
-    const age = Number(newChildAge);
-    if (Number.isNaN(age) || age < 0) return;
-    setProfile((prev) => ({ ...prev, children: [...prev.children, { age, gender: newChildGender }] }));
-    setNewChildAge("");
-  }
 
   function addDoc() {
     if (!newDocType) return;
