@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { CitizenProfile, DocType } from "@/lib/types";
 import { useJourneys } from "@/components/JourneyProvider";
 import { useLocale } from "@/components/LocaleProvider";
@@ -28,7 +28,10 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
   const [newDocType, setNewDocType] = useState<DocType | "">("");
   const [newDocIssuer, setNewDocIssuer] = useState("");
   const [newChildAge, setNewChildAge] = useState("");
+  const [newChildAge, setNewChildAge] = useState("");
   const [newChildGender, setNewChildGender] = useState<"male" | "female">("female");
+  const [importError, setImportError] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   useEscapeClose(onClose);
 
   function patch(p: Partial<CitizenProfile>) {
@@ -37,6 +40,47 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
 
   const present = new Set(docs.map((d) => d.type));
   const addable = ALL_DOC_TYPES.filter((t) => !present.has(t.type));
+
+  function addChild() {
+    const age = Number(newChildAge);
+    if (Number.isNaN(age) || age < 0) return;
+    setProfile((prev) => ({ ...prev, children: [...prev.children, { age, gender: newChildGender }] }));
+    setNewChildAge("");
+  }
+
+  async function exportData() {
+    try {
+      const res = await fetch("/api/session", { cache: "no-store" });
+      const snapshot = (await res.json()) ?? {};
+      const blob = new Blob([JSON.stringify({ ...snapshot, exportedAt: new Date().toISOString() }, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "umang-demo-data.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {}
+  }
+
+  async function importData(file: File) {
+    try {
+      const text = await file.text();
+      if (text.length > 900_000) throw new Error("too large");
+      const parsed = JSON.parse(text) as Record<string, unknown>;
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("invalid");
+      if (!("journeys" in parsed || "profile" in parsed || "docs" in parsed || "messages" in parsed)) throw new Error("invalid");
+      const res = await fetch("/api/session", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: text,
+      });
+      if (!res.ok) throw new Error("save failed");
+      window.location.reload();
+    } catch {
+      setImportError(true);
+      setTimeout(() => setImportError(false), 4000);
+    }
+  }
 
   function updateChild(idx: number, age: number) {
     setProfile((prev) => ({
@@ -228,6 +272,37 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
               </div>
             )}
             <p className="text-[11px] text-slate-400">Tip: add “Address proof” or “PUC certificate” to unlock tasks that are currently blocked on missing documents.</p>
+          </section>
+
+          <section className="space-y-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Backup</h3>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => void exportData()}
+                className="text-xs font-medium px-3 py-1.5 rounded-full border border-slate-300 text-slate-600 hover:border-orange-500 hover:text-orange-600 transition"
+              >
+                {t("profile.export")}
+              </button>
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="text-xs font-medium px-3 py-1.5 rounded-full border border-slate-300 text-slate-600 hover:border-orange-500 hover:text-orange-600 transition"
+              >
+                {t("profile.import")}
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="application/json"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void importData(f);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+            {importError && <p className="text-xs text-red-600">{t("profile.importError")}</p>}
+            <p className="text-[11px] text-slate-400">Move your demo data between browsers, or keep a copy before resetting.</p>
           </section>
         </div>
 

@@ -61,9 +61,13 @@ const en = {
   "sla.dismiss": "Dismiss for today",
   "journey.delete": "Delete journey",
   "journey.deleteConfirm": "Delete this journey and its tasks? Chat history is kept.",
+  "sample.pending": "What's still pending from my job change?",
   "sample.job": "I changed my job and moved from Maharashtra to Karnataka for TCS",
   "sample.vehicle": "I bought a second-hand car yesterday",
   "sample.pending": "What's still pending from my job change?",
+  "profile.export": "Export data",
+  "profile.import": "Import data",
+  "profile.importError": "Could not import — not a valid backup file.",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -132,7 +136,12 @@ const hi: Record<TranslationKey, string> = {
   "journey.deleteConfirm": "इस जर्नी और उसके कार्यों को हटाएँ? चैट इतिहास बना रहेगा।",
   "sample.job": "मैंने नौकरी बदली और TCS के लिए महाराष्ट्र से कर्नाटक शिफ्ट हो गया",
   "sample.vehicle": "मैंने कल एक पुरानी कार खरीदी",
+  "sample.job": "मैंने नौकरी बदली और TCS के लिए महाराष्ट्र से कर्नाटक शिफ्ट हो गया",
+  "sample.vehicle": "मैंने कल एक पुरानी कार खरीदी",
   "sample.pending": "मेरी नौकरी बदलने में अब क्या बाकी है?",
+  "profile.export": "डेटा एक्सपोर्ट करें",
+  "profile.import": "डेटा इंपोर्ट करें",
+  "profile.importError": "इंपोर्ट नहीं हो सका — यह मान्य बैकअप फ़ाइल नहीं है।",
 };
 
 const DICT: Record<Locale, Record<TranslationKey, string>> = { en, hi };
