@@ -1,4 +1,5 @@
 import { mkdirSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
@@ -45,10 +46,19 @@ export class Kv {
 
 let kv: Kv | null = null;
 
+/**
+ * Serverless-safe data dir: the project directory is read-only on Vercel, so
+ * fall back to /tmp (ephemeral there — a hosted DB is the real fix in prod).
+ */
 export function getKv(): Kv {
   if (!kv) {
-    const dir = process.env.UMANG_DATA_DIR ?? path.join(process.cwd(), ".data");
-    mkdirSync(dir, { recursive: true });
+    let dir = process.env.UMANG_DATA_DIR ?? path.join(process.cwd(), ".data");
+    try {
+      mkdirSync(dir, { recursive: true });
+    } catch {
+      dir = path.join(tmpdir(), "umang-data");
+      mkdirSync(dir, { recursive: true });
+    }
     kv = new Kv(path.join(dir, "umang.db"));
   }
   return kv;
