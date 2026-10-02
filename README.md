@@ -63,9 +63,20 @@ src/
 
 ## Data & persistence
 
-- Journeys, chat history, profile and DigiLocker documents persist server-side in `.data/umang.db` (gitignored), keyed by an anonymous device cookie — no sign-up needed.
-- The locale preference is device-local.
-- Swapping to a hosted database later means reimplementing `src/lib/db.ts` + the `/api/session` handlers; the repository contract stays the same.
+- Journeys, chat history, profile and DigiLocker documents persist **server-side**, keyed by an anonymous device cookie — no sign-up needed.
+- Locally (zero config): a SQLite file at `.data/umang.db` via `node:sqlite`.
+- On Vercel / hosted: set `DATABASE_URL` (Neon / Vercel Postgres) and the same key-value contract moves to Postgres (`src/lib/pgStore.ts`); without it the app degrades to `/tmp` SQLite, which is ephemeral on serverless.
+- The locale preference is device-local; `POST /api/digest` emails your SLA summary when `RESEND_API_KEY` + `SLA_DIGEST_TO` are set (preview-only otherwise), and `GET /api/health` reports store connectivity for uptime checks.
+
+### Environment variables
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `GEMINI_API_KEY` (or `OPENAI_API_KEY`) | yes | Chat + grievance drafting (`AI_PROVIDER` picks the backend) |
+| `AI_PROVIDER`, `AI_MODEL` | no | Provider switch and model override |
+| `DATABASE_URL` / `POSTGRES_URL` | no | Persistent Postgres store (Neon/Vercel); default is local SQLite |
+| `UMANG_DATA_DIR` | no | Override the SQLite directory |
+| `RESEND_API_KEY`, `SLA_DIGEST_TO` | no | Enable the emailed SLA digest |
 
 ## Roadmap
 
