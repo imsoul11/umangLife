@@ -3,11 +3,17 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
-/**
- * Minimal key-value store backed by SQLite (node:sqlite — no external deps).
- * Swap this file for Postgres/Prisma later; repository.ts is the only caller.
- */
-export class Kv {
+/** Storage backend contract — SQLite locally, Postgres when DATABASE_URL is set. */
+export interface Store {
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string): Promise<void>;
+  del(key: string): Promise<void>;
+  /** Moves every `fromPrefix*` key to `toPrefix*`. */
+  rekeyPrefix(fromPrefix: string, toPrefix: string): Promise<void>;
+}
+
+/** Minimal key-value store backed by SQLite (node:sqlite — no external deps). */
+export class Kv implements Store {
   private db: DatabaseSync;
 
   constructor(dbPath: string) {
@@ -15,27 +21,27 @@ export class Kv {
     this.db.exec("CREATE TABLE IF NOT EXISTS kv (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at INTEGER NOT NULL)");
   }
 
-  get(key: string): string | null {
+  async get(key: string): Promise<string | null> {
     const row = this.db.prepare("SELECT value FROM kv WHERE key = ?").get(key) as { value: string } | undefined;
     return row?.value ?? null;
   }
 
-  set(key: string, value: string): void {
+  async set(key: string, value: string): Promise<void> {
     this.db
       .prepare("INSERT INTO kv (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at")
       .run(key, value, Date.now());
   }
 
-  del(key: string): void {
+  async del(key: string): Promise<void> {
     this.db.prepare("DELETE FROM kv WHERE key = ?").run(key);
   }
 
-  /** Moves every `prefix:from:*` key to `prefix:to:*` (used for data migration on login). */
-  rekeyPrefix(fromPrefix: string, toPrefix: string): void {
+  /** Moves every `prefix:from:*` key to `prefix:to:*`. */
+  async rekeyPrefix(fromPrefix: string, toPrefix: string): Promise<void> {
     const rows = this.db.prepare("SELECT key, value FROM kv WHERE key LIKE ?").all(`${fromPrefix}%`) as { key: string; value: string }[];
     for (const row of rows) {
-      this.del(row.key);
-      this.set(toPrefix + row.key.slice(fromPrefix.length), row.value);
+      await this.del(row.key);
+      await this.set(toPrefix + row.key.slice(fromPrefix.length), row.value);
     }
   }
 
@@ -44,14 +50,14 @@ export class Kv {
   }
 }
 
-let kv: Kv | null = null;
+let store: Store | null = null;
 
 /**
  * Serverless-safe data dir: the project directory is read-only on Vercel, so
- * fall back to /tmp (ephemeral there — a hosted DB is the real fix in prod).
+ * fall back to /tmp (ephemeral there — set DATABASE_URL for real persistence).
  */
-export function getKv(): Kv {
-  if (!kv) {
+export function getStore(): Store {
+  if (!store) {
     let dir = process.env.UMANG_DATA_DIR ?? path.join(process.cwd(), ".data");
     try {
       mkdirSync(dir, { recursive: true });
@@ -59,7 +65,7 @@ export function getKv(): Kv {
       dir = path.join(tmpdir(), "umang-data");
       mkdirSync(dir, { recursive: true });
     }
-    kv = new Kv(path.join(dir, "umang.db"));
+    store = new Kv(path.join(dir, "umang.db"));
   }
-  return kv;
+  return store;
 }
