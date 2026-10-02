@@ -16,6 +16,7 @@
     "smoke": "tsx scripts/smoke.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.2.0",
     "@xyflow/react": "^12.11.5",
     "next": "16.3.3",
     "openai": "^7.5.0",

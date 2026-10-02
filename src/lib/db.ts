@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { PgStore } from "@/lib/pgStore";
 
 /** Storage backend contract — SQLite locally, Postgres when DATABASE_URL is set. */
 export interface Store {
@@ -53,11 +54,17 @@ export class Kv implements Store {
 let store: Store | null = null;
 
 /**
- * Serverless-safe data dir: the project directory is read-only on Vercel, so
- * fall back to /tmp (ephemeral there — set DATABASE_URL for real persistence).
+ * Backend selection: Postgres (Neon) when DATABASE_URL/POSTGRES_URL is set,
+ * otherwise a local SQLite file. Serverless-safe: the project directory is
+ * read-only on Vercel, so fall back to /tmp when SQLite is used there.
  */
 export function getStore(): Store {
   if (!store) {
+    const url = process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
+    if (url) {
+      store = new PgStore(url);
+      return store;
+    }
     let dir = process.env.UMANG_DATA_DIR ?? path.join(process.cwd(), ".data");
     try {
       mkdirSync(dir, { recursive: true });
@@ -68,4 +75,10 @@ export function getStore(): Store {
     store = new Kv(path.join(dir, "umang.db"));
   }
   return store;
+}
+
+/** Which backend the singleton resolves to (for the health endpoint). */
+export function storeKind(): "postgres" | "sqlite" {
+  const url = process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
+  return url ? "postgres" : "sqlite";
 }
