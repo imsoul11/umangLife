@@ -7,6 +7,7 @@ import { buildCalendar } from "@/lib/engine";
 import { buildDemoJourneys } from "@/data/seed";
 import { loadEscalations, loadSession, saveEscalations, saveSession, type EscalatedRecord } from "@/lib/repository";
 import { useLocale } from "@/components/LocaleProvider";
+import PageHeader from "@/components/PageHeader";
 
 interface GrievanceState {
   entry: CalendarEntry;
@@ -163,43 +164,40 @@ export default function CalendarPage() {
 
   return (
     <div className="min-h-screen relative z-[1]">
-      <header className="sticky top-0 z-40 border-b border-indigo-ink/10 bg-white/70 backdrop-blur-lg px-4 lg:px-6 py-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white grid place-items-center font-bold shadow-md">📅</div>
-          <div>
-            <h1 className="font-display font-semibold text-indigo-ink text-lg leading-tight tracking-tight">{t("calendar.title")}</h1>
-            <p className="text-[11px] text-slate-500">{t("calendar.subtitle")}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {view === "month" && (
-            <div className="flex items-center gap-1 text-sm">
-              <button onClick={() => setCursor((c) => (c.m === 0 ? { y: c.y - 1, m: 11 } : { y: c.y, m: c.m - 1 }))} className="w-7 h-7 grid place-items-center rounded-lg border border-slate-200 hover:border-saffron text-slate-600">←</button>
-              <span className="w-28 text-center font-medium text-slate-800">
-                {new Date(cursor.y, cursor.m, 1).toLocaleDateString(localeTag, { month: "long", year: "numeric" })}
-              </span>
-              <button onClick={() => setCursor((c) => (c.m === 11 ? { y: c.y + 1, m: 0 } : { y: c.y, m: c.m + 1 }))} className="w-7 h-7 grid place-items-center rounded-lg border border-slate-200 hover:border-saffron text-slate-600">→</button>
-              <button
-                onClick={() => {
-                  setCursor({ y: today.getFullYear(), m: today.getMonth() });
-                  setSelectedDay(toDayKey(today.toISOString()));
-                }}
-                className="ml-1 px-2.5 py-1 rounded-lg text-xs border border-slate-200 text-slate-600 hover:border-saffron"
-              >
-                {t("calendar.today")}
-              </button>
+      <PageHeader
+        icon={<span className="text-lg leading-none">📅</span>}
+        title={t("calendar.title")}
+        subtitle={t("calendar.subtitle")}
+        actions={
+          <>
+            {view === "month" && (
+              <div className="flex items-center gap-1 text-sm">
+                <button onClick={() => setCursor((c) => (c.m === 0 ? { y: c.y - 1, m: 11 } : { y: c.y, m: c.m - 1 }))} className="w-7 h-7 grid place-items-center rounded-full border border-slate-200 bg-white/85 shadow-sm hover:border-saffron/60 hover:text-saffron text-slate-600 transition">←</button>
+                <span className="w-28 text-center font-medium text-slate-800">
+                  {new Date(cursor.y, cursor.m, 1).toLocaleDateString(localeTag, { month: "long", year: "numeric" })}
+                </span>
+                <button onClick={() => setCursor((c) => (c.m === 11 ? { y: c.y + 1, m: 0 } : { y: c.y, m: c.m + 1 }))} className="w-7 h-7 grid place-items-center rounded-full border border-slate-200 bg-white/85 shadow-sm hover:border-saffron/60 hover:text-saffron text-slate-600 transition">→</button>
+                <button
+                  onClick={() => {
+                    setCursor({ y: today.getFullYear(), m: today.getMonth() });
+                    setSelectedDay(toDayKey(today.toISOString()));
+                  }}
+                  className="ml-1 px-2.5 py-1 rounded-full text-xs border border-slate-200 bg-white/85 shadow-sm text-slate-600 hover:border-saffron/60 hover:text-saffron transition"
+                >
+                  {t("calendar.today")}
+                </button>
+              </div>
+            )}
+            <div className="flex rounded-full bg-white/85 p-0.5 ring-1 ring-indigo-ink/[0.08] shadow-sm text-xs">
+              {(["month", "timeline"] as View[]).map((v) => (
+                <button key={v} onClick={() => setView(v)} className={`px-3 py-1 font-medium rounded-full transition ${view === v ? "bg-indigo-ink text-white shadow-sm" : "text-slate-600 hover:text-slate-900"}`}>
+                  {v === "month" ? t("calendar.month") : t("calendar.timeline")}
+                </button>
+              ))}
             </div>
-          )}
-          <div className="flex rounded-lg border border-slate-200 overflow-hidden text-xs">
-            {(["month", "timeline"] as View[]).map((v) => (
-              <button key={v} onClick={() => setView(v)} className={`px-3 py-1.5 font-medium ${view === v ? "bg-indigo-ink text-white" : "bg-white text-slate-600 hover:bg-slate-50"}`}>
-                {v === "month" ? t("calendar.month") : t("calendar.timeline")}
-              </button>
-            ))}
-          </div>
-          <Link href="/" className="text-sm text-saffron font-medium hover:underline">{t("calendar.back")}</Link>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <main className="max-w-5xl mx-auto p-4 lg:p-6 space-y-4">
         {urgentCount > 0 && (
@@ -209,28 +207,31 @@ export default function CalendarPage() {
         )}
 
         {journeys.length === 0 ? (
-          <div className="text-center py-16 space-y-4">
-            <p className="text-4xl">📅</p>
-            <p className="text-slate-600 font-medium">{t("calendar.empty")}</p>
+          <div className="card relative overflow-hidden text-center py-16 space-y-4 max-w-lg mx-auto">
+            <div aria-hidden className="absolute -top-20 left-1/2 h-44 w-80 -translate-x-1/2 rounded-full bg-saffron/10 blur-3xl" />
+            <div aria-hidden className="floaty absolute right-8 top-10 text-xl opacity-25 select-none">🗓️</div>
+            <div aria-hidden className="floaty absolute left-10 bottom-10 text-lg opacity-20 select-none" style={{ animationDelay: "-3s" }}>⚖️</div>
+            <p className="relative text-5xl">📅</p>
+            <p className="relative text-slate-600 font-medium">{t("calendar.empty")}</p>
             <button
               onClick={() => {
                 const seeded = buildDemoJourneys();
                 setJourneys(seeded);
                 void saveSession({ journeys: seeded, messages: [], activeId: seeded[0]?.id });
               }}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white text-sm font-semibold shadow-md hover:opacity-95 transition"
+              className="btn-primary relative px-4 py-2.5 rounded-xl text-white text-sm font-semibold"
             >
               {t("calendar.loadDemo")}
             </button>
-            <div>
+            <div className="relative">
               <Link href="/" className="text-sm text-saffron font-medium hover:underline">{t("calendar.startJourney")}</Link>
             </div>
           </div>
         ) : view === "month" ? (
           <>
             {/* ---- month grid ---- */}
-            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-              <div className="grid grid-cols-7 text-center text-[11px] font-semibold uppercase tracking-wide text-slate-400 bg-slate-50 border-b border-slate-100">
+            <div className="card overflow-hidden">
+              <div className="grid grid-cols-7 text-center text-[11px] font-semibold uppercase tracking-wide text-indigo-ink/50 bg-indigo-ink/[0.03] border-b border-indigo-ink/[0.06]">
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
                   <div key={d} className="py-2">{d}</div>
                 ))}
@@ -340,10 +341,12 @@ function EntryRow({
   const overdue = dLeft < 0;
   return (
     <div
-      className={`anim-rise rounded-xl border p-4 flex items-center gap-4 ${overdue ? "border-red-300 bg-red-50/70" : e.severity === "warning" ? "border-amber-300 bg-amber-50/60" : "border-slate-200 bg-white"}`}
+      className={`anim-rise card-hover rounded-2xl border p-4 flex items-center gap-4 bg-white shadow-sm ${
+        overdue ? "border-red-300 bg-red-50/70" : e.severity === "warning" ? "border-amber-300 bg-amber-50/60" : "border-slate-200"
+      }`}
       style={{ animationDelay: `${index * 45}ms` }}
     >
-      <div className={`w-12 h-12 shrink-0 rounded-lg grid place-items-center text-center leading-tight ${overdue ? "bg-red-600 text-white" : "bg-indigo-ink text-white"}`}>
+      <div className={`w-12 h-12 shrink-0 rounded-xl grid place-items-center text-center leading-tight ring-1 ring-inset ring-white/30 ${overdue ? "bg-red-600 text-white shadow-md shadow-red-500/30" : "bg-indigo-ink text-white shadow-md shadow-indigo-950/30"}`}>
         <div className="text-[10px] font-semibold">{new Date(e.date).toLocaleDateString("en-IN", { month: "short" })}</div>
         <div className="text-base font-bold leading-none">{new Date(e.date).getDate()}</div>
       </div>
@@ -392,14 +395,15 @@ function GrievanceModal({
   onFile: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl anim-pop overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 pt-5 pb-4 border-b border-slate-100">
+    <div className="fixed inset-0 z-50 bg-indigo-950/60 backdrop-blur-md grid place-items-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-3xl max-w-2xl w-full shadow-[0_32px_80px_-24px_rgba(26,20,64,0.5)] anim-pop overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="relative px-6 pt-5 pb-4">
           <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-slate-400">
             ⚖️ Escalation · CPGRAMS · Centralised Public Grievance Redress &amp; Monitoring System
           </div>
-          <h3 className="font-semibold text-lg text-slate-900 mt-1">Raise a grievance for “{g.entry.title}”</h3>
+          <h3 className="font-display font-semibold text-lg text-indigo-ink mt-1">Raise a grievance for “{g.entry.title}”</h3>
           <p className="text-xs text-slate-500 mt-0.5">{g.entry.applicationRef ? `Application ${g.entry.applicationRef} · ${g.entry.service?.replace("_", " ")}` : ""}</p>
+          <div className="hairline" aria-hidden />
         </div>
 
         <div className="p-6 space-y-4 max-h-[55vh] overflow-y-auto">
@@ -422,11 +426,11 @@ function GrievanceModal({
             <>
               <div>
                 <label className="text-xs font-medium text-slate-600">Subject</label>
-                <input value={g.subject} onChange={(e) => onEdit(e.target.value, g.body)} className="mt-1 w-full text-sm text-slate-900 bg-white px-3 py-2 rounded-lg border border-slate-200 focus:border-saffron focus:outline-none" />
+                <input value={g.subject} onChange={(e) => onEdit(e.target.value, g.body)} className="mt-1 w-full text-sm text-slate-900 bg-white px-3 py-2 rounded-lg border border-slate-200 focus:border-saffron focus:ring-4 focus:ring-saffron/10 focus:outline-none transition" />
               </div>
               <div>
                 <label className="text-xs font-medium text-slate-600">Complaint body — edit freely, facts are grounded in your journey</label>
-                <textarea value={g.body} rows={11} onChange={(e) => onEdit(g.subject, e.target.value)} className="mt-1 w-full text-sm text-slate-900 bg-white px-3 py-2 rounded-lg border border-slate-200 focus:border-saffron focus:outline-none leading-relaxed" />
+                <textarea value={g.body} rows={11} onChange={(e) => onEdit(g.subject, e.target.value)} className="mt-1 w-full text-sm text-slate-900 bg-white px-3 py-2 rounded-lg border border-slate-200 focus:border-saffron focus:ring-4 focus:ring-saffron/10 focus:outline-none leading-relaxed transition" />
               </div>
               {g.facts && g.facts.length > 0 && (
                 <details className="text-xs text-slate-400">
@@ -442,11 +446,11 @@ function GrievanceModal({
 
         <div className="px-6 py-4 border-t border-slate-100 flex gap-2">
           {g.grievanceId ? (
-            <button onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-slate-800 text-white text-sm font-semibold">Close</button>
+            <button onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-indigo-ink hover:bg-[#241b58] text-white text-sm font-semibold transition">Close</button>
           ) : g.drafting ? null : (
             <>
               <button onClick={onClose} className="px-4 py-2.5 rounded-xl text-sm text-slate-500 hover:text-slate-700">Cancel</button>
-              <button onClick={onFile} disabled={g.filing} className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-sm font-semibold transition">
+              <button onClick={onFile} disabled={g.filing} className="flex-1 py-2.5 rounded-xl bg-gradient-to-br from-red-500 to-red-600 hover:brightness-105 disabled:bg-slate-200 disabled:text-slate-400 text-white text-sm font-semibold shadow-md shadow-red-500/25 transition">
                 {g.filing ? "Filing to CPGRAMS…" : "🚩 File grievance to CPGRAMS"}
               </button>
             </>

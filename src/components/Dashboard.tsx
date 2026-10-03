@@ -70,10 +70,14 @@ function DashboardInner() {
                 const done = st.filter((t) => t.status === "done").length;
                 return (
                   <div key={j.id} className="flex shrink-0 items-center gap-0.5">
-                    <button onClick={() => setActiveId(j.id)}
+                    <button
+                      onClick={() => setActiveId(j.id)}
                       className={`px-3.5 py-2 rounded-full text-xs font-medium border transition ${
-                        j.id === activeId ? "bg-orange-600 text-white border-orange-600" : "bg-white text-slate-600 border-slate-200 hover:border-orange-300"
-                      }`}>
+                        j.id === activeId
+                          ? "bg-gradient-to-br from-saffron to-saffron-deep text-white border-transparent shadow-md shadow-saffron/30"
+                          : "bg-white/85 text-slate-600 border-slate-200 shadow-sm hover:border-saffron/50 hover:text-saffron"
+                      }`}
+                    >
                       {j.emoji} {j.title.replace(" Journey", "")} · {done}/{st.length}
                     </button>
                     <button
@@ -123,8 +127,8 @@ function DashboardInner() {
 
       {digiToast && (
         <div key={digiToast.key} className="fixed bottom-5 right-5 z-[60] anim-rise">
-          <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-white/95 backdrop-blur px-4 py-3 shadow-xl">
-            <div className="w-9 h-9 rounded-full bg-emerald-100 grid place-items-center text-lg">🛡</div>
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-white/95 backdrop-blur px-4 py-3 shadow-lift ring-1 ring-emerald-100">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-jade to-emerald-600 text-white grid place-items-center text-lg shadow-md shadow-emerald-500/25">🛡</div>
             <div>
               <p className="text-sm font-semibold text-slate-900">Saved to your DigiLocker</p>
               <p className="text-xs text-slate-500 truncate max-w-[220px]">{digiToast.doc}</p>

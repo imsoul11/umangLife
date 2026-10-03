@@ -165,28 +165,32 @@ export default function TaskWizard({
   useEscapeClose(onClose);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={task.title} className="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden anim-pop" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-indigo-950/60 backdrop-blur-md grid place-items-center p-4" onClick={onClose}>
+      <div role="dialog" aria-modal="true" aria-label={task.title} className="bg-white rounded-3xl max-w-xl w-full shadow-[0_32px_80px_-24px_rgba(26,20,64,0.5)] overflow-hidden anim-pop" onClick={(e) => e.stopPropagation()}>
         {/* header */}
-        <div className="px-6 pt-5 pb-4 border-b border-slate-100">
+        <div className="relative px-6 pt-5 pb-4">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-wide text-slate-400">{task.service.replace("_", " ")} · official application</p>
-              <h3 className="font-semibold text-lg text-slate-900 leading-snug">{task.title}</h3>
+              <p className="text-[11px] uppercase tracking-wide text-slate-400 flex items-center gap-1.5">
+                <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-saffron" />
+                {task.service.replace("_", " ")} · official application
+              </p>
+              <h3 className="font-display font-semibold text-lg text-indigo-ink leading-snug">{task.title}</h3>
             </div>
             <StatusBadge status={justSubmitted ? "done" : task.status} />
           </div>
           {!justSubmitted && !readOnly && (
-            <div className="mt-3 flex items-center gap-2">
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-slate-50 ring-1 ring-indigo-ink/[0.06] px-3 py-1.5">
               {STEPS.map((s, i) => (
                 <div key={s} className="flex items-center gap-2">
-                  <span className={`w-5 h-5 rounded-full grid place-items-center text-[10px] font-bold ${i <= step && formReady ? "bg-orange-600 text-white" : "bg-slate-200 text-slate-500"}`}>{i + 1}</span>
+                  <span className={`w-5 h-5 rounded-full grid place-items-center text-[10px] font-bold ${i < step && formReady ? "bg-jade text-white ring-2 ring-jade/20" : i <= step && formReady ? "bg-saffron text-white" : "bg-slate-200 text-slate-500"}`}>{i < step && formReady ? "✓" : i + 1}</span>
                   <span className={`text-xs ${i === step ? "text-slate-800 font-medium" : "text-slate-400"}`}>{s}</span>
                   {i < 2 && <span className="text-slate-300">→</span>}
                 </div>
               ))}
             </div>
           )}
+          <div className="hairline" aria-hidden />
         </div>
 
         {/* ---------- FETCH SEQUENCE ---------- */}
@@ -250,9 +254,10 @@ export default function TaskWizard({
           </div>
         ) : justSubmitted ? (
           /* ---------- SUCCESS ---------- */
-          <div className="p-8 text-center space-y-3 min-h-[240px] anim-pop">
-            <div className="text-5xl">{task.slaDays ? "📨" : "✅"}</div>
-            <h4 className="font-semibold text-xl text-slate-900">{task.slaDays ? "Application submitted" : "Completed"}</h4>
+          <div className="relative p-8 text-center space-y-3 min-h-[240px] anim-pop overflow-hidden">
+            <div aria-hidden className="absolute -top-16 left-1/2 h-40 w-72 -translate-x-1/2 rounded-full bg-jade/15 blur-3xl" />
+            <div className="relative text-5xl">{task.slaDays ? "📨" : "✅"}</div>
+            <h4 className="relative font-display font-semibold text-xl text-indigo-ink">{task.slaDays ? "Application submitted" : "Completed"}</h4>
             {task.slaDays ? (
               <>
                 <p className="text-sm text-slate-600 max-w-sm mx-auto">
@@ -298,7 +303,7 @@ export default function TaskWizard({
                         onChange={(e) => update(f.id, e.target.value)}
                         className={`w-full text-sm text-slate-900 bg-white placeholder:text-slate-500 px-3 py-2 rounded-lg border focus:outline-none ${
                           isPrefilled ? "border-l-4 border-l-emerald-400 border-slate-200 bg-emerald-50/30" : needsInput ? "border-dashed border-amber-300 bg-amber-50/30" : "border-slate-200"
-                        } focus:border-orange-500`}
+                        } focus:border-saffron focus:ring-4 focus:ring-saffron/10 transition-colors`}
                       >
                         <option value="">Select…</option>
                         {(f.options ?? []).map((o) => <option key={o} value={o}>{o}</option>)}
@@ -310,7 +315,7 @@ export default function TaskWizard({
                         onChange={(e) => update(f.id, e.target.value)}
                         className={`w-full text-sm text-slate-900 bg-white placeholder:text-slate-500 px-3 py-2 rounded-lg border focus:outline-none ${
                           isPrefilled ? "border-l-4 border-l-emerald-400 border-slate-200 bg-emerald-50/30" : needsInput && f.required !== false ? "border-dashed border-amber-300 bg-amber-50/30" : "border-slate-200"
-                        } focus:border-orange-500`}
+                        } focus:border-saffron focus:ring-4 focus:ring-saffron/10 transition-colors`}
                       />
                     )}
                     {needsInput && f.required !== false && (
@@ -391,7 +396,7 @@ export default function TaskWizard({
                   <button
                     onClick={() => setStep(1)}
                     disabled={missingRequired.length > 0}
-                    className="flex-1 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-sm font-semibold transition"
+                    className="btn-primary flex-1 py-2.5 rounded-xl disabled:bg-slate-200 disabled:bg-none disabled:text-slate-400 disabled:shadow-none text-white text-sm font-semibold"
                   >
                     {missingRequired.length > 0
                       ? `Fill ${missingRequired.length} remaining field${missingRequired.length !== 1 ? "s" : ""} to continue`
@@ -404,7 +409,7 @@ export default function TaskWizard({
                     <button
                       onClick={submit}
                       disabled={!declared[0] || !declared[1]}
-                      className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-sm font-semibold transition"
+                      className="flex-1 py-2.5 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 hover:brightness-105 disabled:bg-slate-200 disabled:bg-none disabled:text-slate-400 text-white text-sm font-semibold shadow-md shadow-emerald-500/25 transition"
                     >
                       {task.slaDays ? `🚀 Submit application · ${task.slaDays}-day SLA` : "🚀 Confirm & Continue"}
                     </button>
@@ -413,7 +418,7 @@ export default function TaskWizard({
               </>
             )}
             {justSubmitted && (
-              <button onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold transition anim-pop">
+              <button onClick={onClose} className="flex-1 py-2.5 rounded-xl bg-indigo-ink hover:bg-[#241b58] text-white text-sm font-semibold transition anim-pop">
                 Back to journey graph →
               </button>
             )}

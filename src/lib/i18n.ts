@@ -1,6 +1,7 @@
 export type Locale = "en" | "hi";
 
 const en = {
+  "nav.journeys": "🧭 My Journeys",
   "nav.benefits": "💰 My Benefits",
   "nav.calendar": "📅 Calendar",
   "nav.about": "ℹ️ About",
@@ -73,6 +74,7 @@ export type TranslationKey = keyof typeof en;
 
 /** Hindi strings for the journey workspace; pages not yet translated stay English. */
 const hi: Record<TranslationKey, string> = {
+  "nav.journeys": "🧭 मेरी यात्राएँ",
   "nav.benefits": "💰 मेरे लाभ",
   "nav.calendar": "📅 कैलेंडर",
   "nav.about": "ℹ️ परिचय",

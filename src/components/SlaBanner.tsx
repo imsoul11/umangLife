@@ -32,7 +32,8 @@ export default function SlaBanner() {
   if (building || urgentCount === 0 || dismissedDay === today) return null;
 
   return (
-    <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 flex items-center gap-3 anim-rise" role="alert">
+    <div className="anim-rise flex items-center gap-3 rounded-2xl border border-red-200 bg-gradient-to-r from-red-50 via-red-50/70 to-red-50/40 px-4 py-3 shadow-sm shadow-red-100/60" role="alert">
+      <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-red-100 text-lg ring-1 ring-red-200">🚨</span>
       <p className="flex-1 text-sm text-red-800 leading-snug">{t("sla.banner", { n: urgentCount })}</p>
       <Link
         href="/calendar"

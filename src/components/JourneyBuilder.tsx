@@ -18,17 +18,17 @@ export default function JourneyBuilder({ stage }: { stage: number }) {
   const pct = Math.min(((stage + 1) / STAGES.length) * 100, 100);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 min-h-[430px] flex flex-col">
+    <div className="card p-6 min-h-[430px] flex flex-col">
       <div className="flex items-center gap-3">
-        <span className="w-9 h-9 rounded-full border-[3px] border-orange-500 border-t-transparent animate-spin" />
+        <span className="w-9 h-9 rounded-full border-[3px] border-saffron border-t-transparent animate-spin" />
         <div>
-          <h3 className="font-semibold text-slate-900">Building your journey…</h3>
+          <h3 className="font-display font-semibold text-indigo-ink">Building your journey…</h3>
           <p className="text-xs text-slate-500">matching your life event against 2,000+ government services</p>
         </div>
       </div>
 
-      <div className="mt-4 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-        <div className="h-full bg-gradient-to-r from-orange-500 to-amber-400 transition-all duration-500 ease-out" style={{ width: `${pct}%` }} />
+      <div className="mt-4 h-1.5 rounded-full bg-slate-100 overflow-hidden ring-1 ring-inset ring-indigo-ink/[0.06]">
+        <div className="h-full bg-gradient-to-r from-saffron to-gold shadow-[0_0_10px_rgba(255,122,26,0.5)] transition-all duration-500 ease-out" style={{ width: `${pct}%` }} />
       </div>
 
       <div className="mt-6 space-y-3.5 flex-1">
@@ -39,9 +39,9 @@ export default function JourneyBuilder({ stage }: { stage: number }) {
             <div key={st.label}>
               <div className="flex items-center gap-3">
                 {isDone ? (
-                  <span className="w-5 h-5 shrink-0 rounded-full bg-emerald-500 text-white grid place-items-center text-[10px] font-bold stage-check">✓</span>
+                  <span className="w-5 h-5 shrink-0 rounded-full bg-jade text-white grid place-items-center text-[10px] font-bold stage-check ring-2 ring-jade/20">✓</span>
                 ) : isActive ? (
-                  <span className="w-5 h-5 shrink-0 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />
+                  <span className="w-5 h-5 shrink-0 rounded-full border-2 border-saffron border-t-transparent animate-spin" />
                 ) : (
                   <span className="w-5 h-5 shrink-0 rounded-full border-2 border-slate-200" />
                 )}

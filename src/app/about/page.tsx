@@ -1,6 +1,4 @@
-"use client";
-
-import Link from "next/link";
+import PageHeader from "@/components/PageHeader";
 
 /**
  * Transparency page — the brief rewards honesty about what is real,
@@ -9,22 +7,15 @@ import Link from "next/link";
 export default function AboutPage() {
   return (
     <div className="min-h-screen relative z-[1]">
-      <header className="sticky top-0 z-40 border-b border-indigo-ink/10 bg-white/70 backdrop-blur-lg px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white grid place-items-center font-bold shadow-md">
-            <span className="font-display text-lg leading-none">उ</span>
-          </div>
-          <div>
-            <h1 className="font-display font-semibold text-indigo-ink text-lg leading-tight tracking-tight">About this prototype</h1>
-            <p className="text-[11px] text-slate-500">What is real, what is mocked, how it could work safely at scale</p>
-          </div>
-        </div>
-        <Link href="/" className="text-sm text-saffron font-medium hover:underline">← Back to journeys</Link>
-      </header>
+      <PageHeader
+        icon={<span className="font-display text-lg leading-none">उ</span>}
+        title="About this prototype"
+        subtitle="What is real, what is mocked, how it could work safely at scale"
+      />
 
       <main className="max-w-3xl mx-auto p-4 lg:p-6 space-y-6">
         {/* problem */}
-        <section className="bg-white rounded-2xl border border-slate-200 p-6">
+        <section className="card p-6">
           <h2 className="font-display text-lg font-semibold text-indigo-ink">The problem we&apos;re solving</h2>
           <p className="text-sm text-slate-600 leading-relaxed mt-2">
             Every life event in India — changing jobs, buying a vehicle or home, having a child, getting married —
@@ -40,7 +31,7 @@ export default function AboutPage() {
         </section>
 
         {/* journey */}
-        <section className="bg-white rounded-2xl border border-slate-200 p-6">
+        <section className="card p-6">
           <h2 className="font-display text-lg font-semibold text-indigo-ink">The complete citizen journey</h2>
           <ol className="mt-3 space-y-2 text-sm text-slate-600">
             {[
@@ -60,7 +51,7 @@ export default function AboutPage() {
         </section>
 
         {/* real vs mocked */}
-        <section className="bg-white rounded-2xl border border-slate-200 p-6">
+        <section className="card p-6">
           <h2 className="font-display text-lg font-semibold text-indigo-ink">What is real vs. what is mocked</h2>
           <p className="text-xs text-slate-500 mt-1">You should never be able to guess which is which from the interface — hence this page.</p>
           <div className="mt-4 grid sm:grid-cols-2 gap-3">
@@ -91,7 +82,7 @@ export default function AboutPage() {
         </section>
 
         {/* consent & safety */}
-        <section className="bg-white rounded-2xl border border-slate-200 p-6">
+        <section className="card p-6">
           <h2 className="font-display text-lg font-semibold text-indigo-ink">Built on consent, ready to scale</h2>
           <ul className="mt-3 space-y-2 text-sm text-slate-600">
             <li className="flex gap-2"><span>🔐</span> Documents are pulled only per-purpose, after explicit consent, and only for the fields that form needs — mirroring the existing DigiLocker consent model.</li>
@@ -101,7 +92,7 @@ export default function AboutPage() {
         </section>
 
         {/* data */}
-        <section className="bg-white rounded-2xl border border-slate-200 p-6">
+        <section className="card p-6">
           <h2 className="font-display text-lg font-semibold text-indigo-ink">Where your data lives</h2>
           <ul className="mt-3 space-y-2 text-sm text-slate-600">
             <li className="flex gap-2"><span>🗄️</span> Journeys, chat history, your profile and document list are stored server-side in a local SQLite file, keyed by an anonymous device cookie — no accounts and no personal data required.</li>
@@ -111,7 +102,7 @@ export default function AboutPage() {
         </section>
 
         {/* stack */}
-        <section className="bg-white rounded-2xl border border-slate-200 p-6">
+        <section className="card p-6">
           <h2 className="font-display text-lg font-semibold text-indigo-ink">How it was built</h2>
           <p className="text-sm text-slate-600 leading-relaxed mt-2">
             The task-graph engine, journey templates, eligibility matcher, calendar and all mock integrations were built

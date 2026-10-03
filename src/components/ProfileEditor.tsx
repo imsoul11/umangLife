@@ -20,7 +20,7 @@ const ALL_DOC_TYPES: { type: DocType; label: string }[] = [
 
 const OCCUPATIONS: CitizenProfile["occupation"][] = ["salaried", "self_employed", "student", "farmer", "unemployed"];
 
-const inputCls = "px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100";
+const inputCls = "px-3 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-saffron focus:ring-4 focus:ring-saffron/10 transition";
 
 export default function ProfileEditor({ onClose }: { onClose: () => void }) {
   const { profile, setProfile, docs, setDocs } = useJourneys();
@@ -104,20 +104,21 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm grid place-items-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-indigo-950/60 backdrop-blur-md grid place-items-center p-4" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Profile and DigiLocker documents"
-        className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg bg-white rounded-3xl shadow-[0_32px_80px_-24px_rgba(26,20,64,0.5)] border border-slate-200/80 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
+        <div className="relative px-6 py-4 flex items-center justify-between sticky top-0 bg-white rounded-t-3xl z-10">
           <div>
-            <h2 className="font-display font-semibold text-indigo-ink">Profile & DigiLocker</h2>
+            <h2 className="font-display font-semibold text-indigo-ink">Profile &amp; DigiLocker</h2>
             <p className="text-[11px] text-slate-500">Edits feed the eligibility engine, task gating and form autofill instantly.</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 text-lg leading-none">✕</button>
+          <div className="hairline" aria-hidden />
         </div>
 
         <div className="px-6 py-4 space-y-5">
@@ -177,7 +178,7 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
                         min={0}
                         value={c.age}
                         onChange={(e) => updateChild(i, Number(e.target.value) || 0)}
-                        className="w-16 px-2 py-1.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-orange-500"
+                        className="w-16 px-2 py-1.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-saffron"
                       />
                     </label>
                     <span className="text-sm text-slate-600">{c.gender === "female" ? t("profile.girl") : t("profile.boy")}</span>
@@ -197,12 +198,12 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
                   placeholder={t("profile.childAge")}
                   value={newChildAge}
                   onChange={(e) => setNewChildAge(e.target.value)}
-                  className="w-20 px-2 py-1.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-orange-500"
+                  className="w-20 px-2 py-1.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-saffron"
                 />
                 <select
                   value={newChildGender}
                   onChange={(e) => setNewChildGender(e.target.value as "male" | "female")}
-                  className="px-2 py-1.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-orange-500"
+                  className="px-2 py-1.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:border-saffron"
                 >
                   <option value="female">{t("profile.girl")}</option>
                   <option value="male">{t("profile.boy")}</option>
@@ -300,7 +301,7 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="px-6 py-4 border-t border-slate-100 sticky bottom-0 bg-white rounded-b-2xl">
-          <button onClick={onClose} className="w-full py-2.5 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white text-sm font-semibold shadow-md hover:opacity-95 transition">
+          <button onClick={onClose} className="w-full py-2.5 rounded-xl btn-primary text-white text-sm font-semibold">
             Done
           </button>
         </div>

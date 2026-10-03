@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import type { CitizenProfile, SchemeMatch } from "@/lib/types";
 import { SCHEMES } from "@/data/schemes";
 import { MOCK_PROFILE } from "@/data/mocks";
 import { matchSchemes } from "@/lib/engine";
 import { loadSession } from "@/lib/repository";
 import { useLocale } from "@/components/LocaleProvider";
+import PageHeader from "@/components/PageHeader";
 
 type Tab = "eligible" | "near" | "all";
 
@@ -33,30 +33,23 @@ export default function BenefitsPage() {
   const visible = tab === "eligible" ? [...eligible, ...near] : tab === "near" ? [...near, ...rest] : matches;
 
   return (
-    <div className="min-h-screen bg-slate-50 relative z-[1]">
-      <header className="sticky top-0 z-40 border-b border-indigo-ink/10 bg-white/70 backdrop-blur-lg px-4 lg:px-6 py-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-jade to-indigo-ink text-white grid place-items-center font-bold shadow-md">₹</div>
-          <div>
-            <h1 className="font-display font-semibold text-indigo-ink text-lg leading-tight tracking-tight">{t("benefits.title")}</h1>
-            <p className="text-xs text-slate-500">
-              {t("benefits.subtitle", { e: eligible.length, n: matches.length, s: profile.state })}
-            </p>
-          </div>
-        </div>
-        <Link href="/" className="text-sm text-orange-600 hover:text-orange-700 font-medium">{t("nav.back")}</Link>
-      </header>
+    <div className="min-h-screen relative z-[1]">
+      <PageHeader
+        icon={<span className="font-display text-lg leading-none">₹</span>}
+        title={t("benefits.title")}
+        subtitle={t("benefits.subtitle", { e: eligible.length, n: matches.length, s: profile.state })}
+      />
 
       <main className="max-w-5xl mx-auto p-4 lg:p-6">
-        <div className="flex gap-2 mb-4">
+        <div className="inline-flex rounded-full bg-white/85 p-1 ring-1 ring-indigo-ink/[0.08] shadow-sm mb-4">
           {([
             ["eligible", t("benefits.tab.eligible", { n: eligible.length })],
             ["near", t("benefits.tab.ineligible", { n: near.length + rest.length })],
             ["all", t("benefits.tab.all", { n: matches.length })],
           ] as [Tab, string][]).map(([id, label]) => (
             <button key={id} onClick={() => setTab(id)}
-              className={`px-4 py-2 rounded-full text-xs font-medium transition ${
-                tab === id ? "bg-emerald-600 text-white" : "bg-white border border-slate-200 text-slate-600 hover:border-emerald-300"
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition ${
+                tab === id ? "bg-gradient-to-br from-jade to-emerald-600 text-white shadow-sm" : "text-slate-600 hover:text-jade"
               }`}>
               {label}
             </button>
@@ -81,7 +74,9 @@ function SchemeRow({ m }: { m: SchemeMatch }) {
   const { t, localeTag } = useLocale();
   const s = m.scheme;
   return (
-    <div className={`rounded-xl border p-4 ${m.eligible ? "border-emerald-200 bg-white" : "border-slate-200 bg-slate-50/60 opacity-80"}`}>
+    <div className={`card-hover relative overflow-hidden rounded-xl border p-4 bg-white shadow-sm ${
+      m.eligible ? "border-emerald-200 border-l-4 border-l-emerald-500" : "border-slate-200 bg-slate-50/60 opacity-80"
+    }`}>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h3 className="font-semibold text-slate-900">{s.name}</h3>
@@ -92,7 +87,7 @@ function SchemeRow({ m }: { m: SchemeMatch }) {
             {s.level === "central" ? t("benefits.levelCentral") : s.state}
           </span>
           {m.eligible ? (
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-emerald-600 text-white">{t("benefits.qualify")}</span>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-gradient-to-br from-jade to-emerald-600 text-white shadow-sm">{t("benefits.qualify")}</span>
           ) : (
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-300 text-slate-600">{t("benefits.criteriaMet", { p: Math.round(m.score * 100) })}</span>
           )}
