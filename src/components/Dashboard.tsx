@@ -1,8 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import type { CalendarEntry, TaskInstance } from "@/lib/types";
-import { buildCalendar, computeTaskStatuses } from "@/lib/engine";
+import { buildCalendar, computeTaskStatuses, matchSchemes } from "@/lib/engine";
+import { SCHEMES } from "@/data/schemes";
 import TaskWizard from "@/components/TaskWizard";
 import JourneyBuilder from "@/components/JourneyBuilder";
 import JourneyGraph from "@/components/JourneyGraph";
@@ -46,17 +48,34 @@ function DashboardInner() {
   const [editorOpen, setEditorOpen] = useState(false);
 
   const activeJourney = journeys.find((j) => j.id === activeId) ?? null;
-  const activeTasks: TaskInstance[] = activeJourney ? computeTaskStatuses(activeJourney, docs) : [];
+  const activeTasks: TaskInstance[] = useMemo(
+    () => (activeJourney ? computeTaskStatuses(activeJourney, docs) : []),
+    [activeJourney, docs],
+  );
   const calendar: CalendarEntry[] = useMemo(
     () => journeys.flatMap((j) => buildCalendar(j)),
     [journeys],
   );
   const doneCount = activeTasks.filter((t) => t.status === "done").length;
   const progress = activeTasks.length ? Math.round((doneCount / activeTasks.length) * 100) : 0;
+  const nextAction = useMemo(
+    () => activeTasks.find((t) => t.status === "action_required") ?? activeTasks.find((t) => t.status === "ready") ?? null,
+    [activeTasks],
+  );
+  const eligibleCount = useMemo(() => matchSchemes(profile, SCHEMES).filter((m) => m.eligible).length, [profile]);
 
   return (
     <div className="relative min-h-screen z-[1]">
-      <DashboardHeader profile={profile} onReset={resetDemo} onOpenProfile={() => setEditorOpen(true)} />
+      <DashboardHeader
+        profile={profile}
+        onReset={resetDemo}
+        onOpenProfile={() => setEditorOpen(true)}
+        journeys={journeys.map((j) => {
+          const st = computeTaskStatuses(j, docs);
+          return { id: j.id, emoji: j.emoji, title: j.title, progressLabel: `${st.filter((x) => x.status === "done").length}/${st.length}` };
+        })}
+        onSelectJourney={setActiveId}
+      />
 
       <main className="max-w-7xl mx-auto p-4 lg:p-6 grid lg:grid-cols-[1fr_400px] gap-4 lg:gap-6">
         <section className="space-y-4 min-w-0">
@@ -68,17 +87,31 @@ function DashboardInner() {
               {journeys.map((j) => {
                 const st = computeTaskStatuses(j, docs);
                 const done = st.filter((t) => t.status === "done").length;
+                const pct = st.length ? Math.round((done / st.length) * 100) : 0;
+                const active = j.id === activeId;
                 return (
                   <div key={j.id} className="flex shrink-0 items-center gap-0.5">
                     <button
                       onClick={() => setActiveId(j.id)}
-                      className={`px-3.5 py-2 rounded-full text-xs font-medium border transition ${
-                        j.id === activeId
-                          ? "bg-gradient-to-br from-saffron to-saffron-deep text-white border-transparent shadow-md shadow-saffron/30"
-                          : "bg-white/85 text-slate-600 border-slate-200 shadow-sm hover:border-saffron/50 hover:text-saffron"
+                      className={`group flex shrink-0 items-center gap-2.5 rounded-full border py-1.5 pl-2.5 pr-3 text-xs font-medium transition ${
+                        active
+                          ? "border-saffron/50 bg-white text-indigo-ink shadow-md shadow-saffron/10 ring-2 ring-saffron/40"
+                          : "border-slate-200 bg-white/70 text-slate-500 shadow-sm hover:border-saffron/40 hover:text-slate-700"
                       }`}
                     >
-                      {j.emoji} {j.title.replace(" Journey", "")} · {done}/{st.length}
+                      <span className="text-base leading-none">{j.emoji}</span>
+                      <span className="flex flex-col items-start gap-1">
+                        <span className="leading-none">{j.title.replace(" Journey", "")}</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="h-1 w-14 overflow-hidden rounded-full bg-slate-200/80">
+                            <span
+                              className={`block h-full rounded-full transition-all duration-500 ${active ? "bg-gradient-to-r from-saffron to-gold" : "bg-slate-400/70"}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </span>
+                          <span className="text-[10px] tabular-nums text-slate-400">{done}/{st.length}</span>
+                        </span>
+                      </span>
                     </button>
                     <button
                       onClick={() => {
@@ -100,23 +133,38 @@ function DashboardInner() {
           ) : !activeJourney ? (
             <EmptyState onPrompt={sendMessage} />
           ) : (
-            <>
-              <ProgressCard
-                journey={activeJourney}
-                progress={progress}
-                done={doneCount}
-                total={activeTasks.length}
-                onDelete={() => {
-                  if (window.confirm(t("journey.deleteConfirm"))) deleteJourney(activeJourney.id);
-                }}
-              />
-              {calendar.length > 0 && <CalendarStrip entries={calendar} />}
-              <JourneyGraph
-                tasks={activeTasks}
-                onSelect={setActiveTask}
-                revealCount={reveal && activeJourney && reveal.journeyId === activeJourney.id ? reveal.n : undefined}
-              />
-            </>
+            /* ---- bento grid ---- */
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="md:col-span-2 anim-rise">
+                <ProgressCard
+                  journey={activeJourney}
+                  progress={progress}
+                  done={doneCount}
+                  total={activeTasks.length}
+                  onDelete={() => {
+                    if (window.confirm(t("journey.deleteConfirm"))) deleteJourney(activeJourney.id);
+                  }}
+                />
+              </div>
+
+              <NextActionTile task={nextAction} onOpen={setActiveTask} />
+
+              {calendar.length > 0 && (
+                <div className="md:col-span-2 anim-rise" style={{ animationDelay: "70ms" }}>
+                  <CalendarStrip entries={calendar} />
+                </div>
+              )}
+
+              <BenefitsTile eligible={eligibleCount} total={SCHEMES.length} />
+
+              <div className="md:col-span-3 anim-rise" style={{ animationDelay: "140ms" }}>
+                <JourneyGraph
+                  tasks={activeTasks}
+                  onSelect={setActiveTask}
+                  revealCount={reveal && activeJourney && reveal.journeyId === activeJourney.id ? reveal.n : undefined}
+                />
+              </div>
+            </div>
           )}
         </section>
 
@@ -163,5 +211,58 @@ export default function Dashboard() {
     <JourneyProvider>
       <DashboardInner />
     </JourneyProvider>
+  );
+}
+
+/** The one thing to do now — first actionable task in the DAG (action_required first, then ready). */
+function NextActionTile({ task, onOpen }: { task: TaskInstance | null; onOpen: (t: TaskInstance) => void }) {
+  const { t } = useLocale();
+  if (!task) {
+    return (
+      <div className="card p-5 flex flex-col anim-rise" style={{ animationDelay: "60ms" }}>
+        <p className="eyebrow">{t("tile.nextAction")}</p>
+        <p className="mt-2.5 flex items-center gap-2 text-sm font-semibold text-jade">
+          <span aria-hidden className="w-2 h-2 rounded-full bg-jade shadow-[0_0_8px_rgba(11,143,92,0.6)]" />
+          {t("tile.allCaughtUp")}
+        </p>
+        <p className="mt-1 text-xs text-slate-500 leading-snug">{t("tile.caughtUpBody")}</p>
+      </div>
+    );
+  }
+  return (
+    <button
+      onClick={() => onOpen(task)}
+      className="card card-hover p-5 text-left flex flex-col anim-rise"
+      style={{ animationDelay: "60ms" }}
+    >
+      <p className="eyebrow">{t("tile.nextAction")}</p>
+      <p className="mt-2.5 font-display font-semibold text-indigo-ink leading-snug">{task.title}</p>
+      <p className="mt-1 text-[11px] text-slate-500">{task.service.replace("_", " ")}{task.status === "action_required" ? " · ⚠️ document missing" : ""}</p>
+      <span className="mt-auto pt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-saffron">
+        {t("tile.openForm")} <span aria-hidden>→</span>
+      </span>
+    </button>
+  );
+}
+
+/** Benefit-match teaser — eligibility engine count, links to /benefits. */
+function BenefitsTile({ eligible, total }: { eligible: number; total: number }) {
+  const { t } = useLocale();
+  return (
+    <Link
+      href="/benefits"
+      className="card card-hover p-5 flex flex-col anim-rise"
+      style={{ animationDelay: "90ms" }}
+    >
+      <p className="eyebrow">{t("nav.benefits")}</p>
+      <p className="mt-2.5 text-3xl font-bold tabular-nums text-indigo-ink leading-none">
+        {eligible}
+        <span className="text-xl text-slate-300">/{total}</span>
+      </p>
+      <p className="mt-1.5 text-xs text-slate-500">{t("tile.schemesMatch")}</p>
+      <span className="mt-auto pt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-jade">
+        {t("tile.viewMatches")} <span aria-hidden>→</span>
+      </span>
+    </Link>
   );
 }

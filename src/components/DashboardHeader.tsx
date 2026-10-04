@@ -4,9 +4,42 @@ import type { CitizenProfile } from "@/lib/types";
 import PageHeader from "./PageHeader";
 import LanguageToggle from "./LanguageToggle";
 import { useLocale } from "./LocaleProvider";
+import type { CommandItem } from "./CommandPalette";
 
-export default function DashboardHeader({ profile, onReset, onOpenProfile }: { profile: CitizenProfile; onReset: () => void; onOpenProfile: () => void }) {
+export default function DashboardHeader({
+  profile,
+  onReset,
+  onOpenProfile,
+  journeys,
+  onSelectJourney,
+}: {
+  profile: CitizenProfile;
+  onReset: () => void;
+  onOpenProfile: () => void;
+  journeys: { id: string; emoji: string; title: string; progressLabel: string }[];
+  onSelectJourney: (id: string) => void;
+}) {
   const { t } = useLocale();
+
+  const commandItems: CommandItem[] = [
+    {
+      id: "action:profile",
+      label: "Edit profile & documents",
+      icon: "🪪",
+      group: "Actions",
+      keywords: "profile digilocker documents edit",
+      run: onOpenProfile,
+    },
+    ...journeys.map((j) => ({
+      id: `journey:${j.id}`,
+      label: j.title.replace(" Journey", ""),
+      icon: j.emoji,
+      group: "Journeys",
+      hint: j.progressLabel,
+      run: () => onSelectJourney(j.id),
+    })),
+  ];
+
   return (
     <PageHeader
       icon={<span className="font-display text-lg leading-none">उ</span>}
@@ -16,6 +49,7 @@ export default function DashboardHeader({ profile, onReset, onOpenProfile }: { p
         </>
       }
       subtitle={t("header.subtitle")}
+      commandItems={commandItems}
       actions={
         <>
           <LanguageToggle />
