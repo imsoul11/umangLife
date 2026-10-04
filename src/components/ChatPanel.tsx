@@ -35,28 +35,28 @@ export default function ChatPanel({
   };
 
   return (
-    <div className="h-full flex flex-col card overflow-hidden">
-      <div className="px-4 py-3.5 border-b border-indigo-ink/[0.06] bg-gradient-to-r from-saffron/[0.06] via-transparent to-transparent">
+    <div className="card-ink h-full flex flex-col overflow-hidden">
+      <div className="px-4 py-3.5 border-b border-white/10 bg-gradient-to-r from-saffron/[0.12] via-transparent to-transparent">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
             <span className="relative flex h-2 w-2" aria-hidden>
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-jade opacity-50" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-jade opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-jade" />
             </span>
             {t("chat.title")}
           </h3>
           {scopeLabel && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/80 ring-1 ring-white/15">
               {t("chat.focused", { s: scopeLabel })}
             </span>
           )}
         </div>
-        <p className="text-[11px] text-slate-500">{t("chat.subtitle")}</p>
+        <p className="text-[11px] text-white/50">{t("chat.subtitle")}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px] lg:min-h-0">
         {messages.length === 0 && (
-          <div className="text-center text-sm text-slate-600 pt-10 space-y-2">
+          <div className="text-center text-sm text-white/70 pt-10 space-y-2">
             <p className="text-3xl">💬</p>
             <p>{t("chat.try")}</p>
           </div>
@@ -67,8 +67,8 @@ export default function ChatPanel({
               <div
                 className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                   m.role === "user"
-                    ? "bg-gradient-to-br from-saffron to-saffron-deep text-white shadow-md shadow-saffron/25 rounded-br-md"
-                    : "bg-white border border-indigo-ink/[0.07] text-slate-800 shadow-sm rounded-bl-md"
+                    ? "bg-gradient-to-br from-saffron to-saffron-deep text-white shadow-md shadow-black/30 rounded-br-md"
+                    : "bg-white/[0.08] text-slate-100 ring-1 ring-white/10 rounded-bl-md"
                 }`}
               >
                 {m.content}
@@ -80,7 +80,7 @@ export default function ChatPanel({
                   <button
                     key={a.taskId + a.kind}
                     onClick={() => onAction(a)}
-                    className="text-xs font-medium px-3 py-1.5 rounded-full bg-white border border-orange-200 text-orange-700 shadow-sm hover:shadow-md hover:-translate-y-px hover:border-orange-400 transition"
+                    className="text-xs font-medium px-3 py-1.5 rounded-full bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/20 hover:-translate-y-px transition"
                   >
                     {a.kind === "open_form" ? "📋" : a.kind === "mark_done" ? "🚀" : "•"} {a.label}
                   </button>
@@ -91,7 +91,7 @@ export default function ChatPanel({
         ))}
         {thinking && (
           <div className="flex justify-start">
-            <div className="bg-white border border-indigo-ink/[0.07] text-slate-600 px-4 py-2.5 rounded-2xl rounded-bl-md shadow-sm text-sm flex items-center gap-2.5">
+            <div className="bg-white/[0.08] ring-1 ring-white/10 text-white/70 px-4 py-2.5 rounded-2xl rounded-bl-md text-sm flex items-center gap-2.5">
               <span className="flex gap-1" aria-hidden>
                 <span className="typing-dot w-1.5 h-1.5 rounded-full bg-saffron" />
                 <span className="typing-dot w-1.5 h-1.5 rounded-full bg-saffron" style={{ animationDelay: "150ms" }} />
@@ -110,7 +110,7 @@ export default function ChatPanel({
             <button
               key={s}
               onClick={() => onSend(s)}
-              className="text-[11px] font-medium px-2.5 py-1.5 rounded-full bg-white ring-1 ring-indigo-ink/10 text-slate-700 shadow-sm hover:text-orange-700 hover:ring-orange-300 hover:-translate-y-px transition"
+              className="text-[11px] font-medium px-2.5 py-1.5 rounded-full bg-white/10 text-white/85 ring-1 ring-white/15 hover:bg-white/20 hover:-translate-y-px transition"
             >
               {s}
             </button>
@@ -120,19 +120,19 @@ export default function ChatPanel({
 
       <ChatErrorBanner />
 
-      <div className="p-3 border-t border-indigo-ink/[0.06] bg-slate-50/60 flex gap-2">
+      <div className="p-3 border-t border-white/10 bg-white/[0.04] flex gap-2">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder={t("chat.placeholder")}
-          className="flex-1 text-sm text-slate-900 bg-white placeholder:text-slate-400 px-4 py-2.5 rounded-xl border border-slate-200 shadow-inner focus:outline-none focus:border-saffron focus:ring-4 focus:ring-saffron/10 transition"
+          className="flex-1 text-sm text-white bg-white/10 placeholder:text-white/40 px-4 py-2.5 rounded-xl ring-1 ring-white/15 focus:outline-none focus:bg-white/15 focus:ring-2 focus:ring-saffron/60 transition"
           disabled={thinking}
         />
         <button
           onClick={submit}
           disabled={thinking || !input.trim()}
-          className="btn-primary px-4 py-2.5 rounded-xl text-white text-sm font-semibold disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none disabled:bg-none"
+          className="btn-primary px-4 py-2.5 rounded-xl text-white text-sm font-semibold disabled:bg-white/10 disabled:bg-none disabled:text-white/30 disabled:shadow-none"
         >
           {t("chat.send")}
         </button>
