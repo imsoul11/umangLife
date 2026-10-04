@@ -167,30 +167,29 @@ export default function TaskWizard({
   return (
     <div className="fixed inset-0 z-50 bg-indigo-950/60 backdrop-blur-md grid place-items-center p-4" onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-label={task.title} className="bg-white rounded-3xl max-w-xl w-full shadow-[0_32px_80px_-24px_rgba(26,20,64,0.5)] overflow-hidden anim-pop" onClick={(e) => e.stopPropagation()}>
-        {/* header */}
-        <div className="relative px-6 pt-5 pb-4">
+        {/* header — ink band */}
+        <div className="px-6 pt-5 pb-4 text-white bg-gradient-to-br from-indigo-ink via-[#241b58] to-[#2e2170]">
           <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-wide text-slate-400 flex items-center gap-1.5">
-                <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-saffron" />
-                {task.service.replace("_", " ")} · official application
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-wider text-white/50 flex items-center gap-1.5">
+                <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-saffron shrink-0" />
+                <span className="truncate">{task.service.replace("_", " ")} · official application</span>
               </p>
-              <h3 className="font-display font-semibold text-lg text-indigo-ink leading-snug">{task.title}</h3>
+              <h3 className="font-display font-semibold text-lg leading-snug mt-0.5">{task.title}</h3>
             </div>
             <StatusBadge status={justSubmitted ? "done" : task.status} />
           </div>
           {!justSubmitted && !readOnly && (
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-slate-50 ring-1 ring-indigo-ink/[0.06] px-3 py-1.5">
+            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/10 ring-1 ring-white/15 px-3 py-1.5">
               {STEPS.map((s, i) => (
                 <div key={s} className="flex items-center gap-2">
-                  <span className={`w-5 h-5 rounded-full grid place-items-center text-[10px] font-bold ${i < step && formReady ? "bg-jade text-white ring-2 ring-jade/20" : i <= step && formReady ? "bg-saffron text-white" : "bg-slate-200 text-slate-500"}`}>{i < step && formReady ? "✓" : i + 1}</span>
-                  <span className={`text-xs ${i === step ? "text-slate-800 font-medium" : "text-slate-400"}`}>{s}</span>
-                  {i < 2 && <span className="text-slate-300">→</span>}
+                  <span className={`w-5 h-5 rounded-full grid place-items-center text-[10px] font-bold ${i < step && formReady ? "bg-jade text-white ring-2 ring-jade/30" : i <= step && formReady ? "bg-saffron text-white" : "bg-white/15 text-white/60"}`}>{i < step && formReady ? "✓" : i + 1}</span>
+                  <span className={`text-xs ${i === step ? "text-white font-medium" : "text-white/40"}`}>{s}</span>
+                  {i < 2 && <span className="text-white/30">→</span>}
                 </div>
               ))}
             </div>
           )}
-          <div className="hairline" aria-hidden />
         </div>
 
         {/* ---------- FETCH SEQUENCE ---------- */}

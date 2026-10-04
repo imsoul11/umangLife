@@ -123,7 +123,7 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
 
         <div className="px-6 py-4 space-y-5">
           <section className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Citizen profile</h3>
+            <h3 className="eyebrow">Citizen profile</h3>
             <div className="grid grid-cols-2 gap-3">
               <label className="space-y-1">
                 <span className="text-xs font-medium text-slate-600">Name</span>
@@ -221,7 +221,7 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
           </section>
 
           <section className="space-y-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">DigiLocker documents ({docs.length})</h3>
+            <h3 className="eyebrow">DigiLocker documents ({docs.length})</h3>
             <ul className="space-y-1.5">
               {docs.map((d) => (
                 <li key={d.type} className="flex items-center justify-between gap-2 rounded-xl border border-slate-200 px-3 py-2">
@@ -269,7 +269,7 @@ export default function ProfileEditor({ onClose }: { onClose: () => void }) {
           </section>
 
           <section className="space-y-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Backup</h3>
+            <h3 className="eyebrow">Backup</h3>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => void exportData()}

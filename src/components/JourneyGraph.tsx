@@ -150,10 +150,17 @@ function JourneyGraphInner({
     return () => cancelAnimationFrame(id);
   }, [rf, nodes.length]);
 
+  const doneCount = tasks.filter((t) => t.status === "done").length;
+
   return (
     <div className="card p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Your Journey Graph</h3>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <h3 className="eyebrow">Your Journey Graph</h3>
+          <span className="rounded-full bg-jade/10 px-2 py-0.5 text-[10px] font-semibold text-jade tabular-nums">
+            {doneCount}/{tasks.length}
+          </span>
+        </div>
         <div className="flex gap-1 rounded-full bg-slate-50 p-0.5 ring-1 ring-indigo-ink/[0.06] text-xs">
           {(["graph", "list"] as const).map((v) => (
             <button
@@ -194,11 +201,11 @@ function JourneyGraphInner({
         <ListView tasks={tasks} onSelect={onSelect} />
       )}
 
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-400">
-        <span>━━ done → ready (unlocks)</span>
-        <span>╌ ╌ locked dependency</span>
-        <span className="text-orange-500 font-medium">pulse = act now</span>
-        <span>drag nodes · scroll to zoom · drag canvas to pan</span>
+      <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] text-slate-500">
+        <span className="rounded-full bg-slate-50 px-2.5 py-1 ring-1 ring-slate-200/70">━━ done → ready (unlocks)</span>
+        <span className="rounded-full bg-slate-50 px-2.5 py-1 ring-1 ring-slate-200/70">╌ ╌ locked dependency</span>
+        <span className="rounded-full bg-orange-50 px-2.5 py-1 ring-1 ring-orange-200/70 text-orange-600 font-medium">pulse = act now</span>
+        <span className="rounded-full bg-slate-50 px-2.5 py-1 ring-1 ring-slate-200/70">drag nodes · scroll to zoom · drag canvas to pan</span>
       </div>
     </div>
   );

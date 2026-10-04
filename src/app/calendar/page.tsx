@@ -201,8 +201,9 @@ export default function CalendarPage() {
 
       <main className="max-w-5xl mx-auto p-4 lg:p-6 space-y-4">
         {urgentCount > 0 && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 anim-rise">
-            {t("calendar.urgentBanner", { n: urgentCount })}
+          <div className="anim-rise flex items-center gap-3 rounded-2xl border border-red-200 bg-gradient-to-r from-red-50 via-red-50/70 to-red-50/40 px-4 py-3 shadow-sm shadow-red-100/60">
+            <span aria-hidden className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-red-100 text-lg ring-1 ring-red-200">🚨</span>
+            <p className="flex-1 text-sm text-red-800 leading-snug">{t("calendar.urgentBanner", { n: urgentCount })}</p>
           </div>
         )}
 
@@ -256,7 +257,7 @@ export default function CalendarPage() {
                       }`}
                     >
                       <span
-                        className={`text-xs leading-none mt-1 ${
+                        className={`text-xs leading-none mt-1 tabular-nums ${
                           isToday ? "w-5 h-5 rounded-full bg-indigo-ink text-white grid place-items-center font-bold" : "font-medium " + (inMonth ? "text-slate-700" : "text-slate-400")
                         }`}
                       >
@@ -305,7 +306,7 @@ export default function CalendarPage() {
           </>
         ) : (
           /* ---- timeline ---- */
-          <div className="space-y-2">
+          <div className="relative space-y-2 before:absolute before:left-[39px] before:top-5 before:bottom-5 before:w-px before:bg-indigo-ink/10">
             {entries.map((e, i) => (
               <EntryRow
                 key={e.id + i}
@@ -397,13 +398,13 @@ function GrievanceModal({
   return (
     <div className="fixed inset-0 z-50 bg-indigo-950/60 backdrop-blur-md grid place-items-center p-4" onClick={onClose}>
       <div className="bg-white rounded-3xl max-w-2xl w-full shadow-[0_32px_80px_-24px_rgba(26,20,64,0.5)] anim-pop overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="relative px-6 pt-5 pb-4">
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-slate-400">
-            ⚖️ Escalation · CPGRAMS · Centralised Public Grievance Redress &amp; Monitoring System
-          </div>
-          <h3 className="font-display font-semibold text-lg text-indigo-ink mt-1">Raise a grievance for “{g.entry.title}”</h3>
-          <p className="text-xs text-slate-500 mt-0.5">{g.entry.applicationRef ? `Application ${g.entry.applicationRef} · ${g.entry.service?.replace("_", " ")}` : ""}</p>
-          <div className="hairline" aria-hidden />
+        <div className="px-6 pt-5 pb-4 text-white bg-gradient-to-br from-indigo-ink via-[#241b58] to-[#2e2170]">
+          <p className="text-[11px] uppercase tracking-wider text-white/50 flex items-center gap-1.5">
+            <span aria-hidden className="w-1.5 h-1.5 rounded-full bg-saffron shrink-0" />
+            <span className="truncate">Escalation · CPGRAMS · Centralised Public Grievance Redress &amp; Monitoring System</span>
+          </p>
+          <h3 className="font-display font-semibold text-lg text-white mt-0.5">Raise a grievance for “{g.entry.title}”</h3>
+          <p className="text-xs text-white/60 mt-0.5">{g.entry.applicationRef ? `Application ${g.entry.applicationRef} · ${g.entry.service?.replace("_", " ")}` : ""}</p>
         </div>
 
         <div className="p-6 space-y-4 max-h-[55vh] overflow-y-auto">
@@ -414,7 +415,7 @@ function GrievanceModal({
               <p className="text-sm text-slate-600 max-w-sm mx-auto">
                 Your complaint has been submitted to CPGRAMS with your journey&apos;s full context. Track it with:
               </p>
-              <div className="inline-block px-5 py-2.5 rounded-xl bg-indigo-ink text-white font-mono text-base tracking-wide">{g.grievanceId}</div>
+              <div className="inline-block px-5 py-2.5 rounded-xl bg-gradient-to-br from-saffron to-saffron-deep text-white font-mono text-base tracking-wide shadow-md shadow-saffron/30">{g.grievanceId}</div>
               <p className="text-xs text-slate-400">Application context (refs, dates, department) was attached automatically — nothing re-explained.</p>
             </div>
           ) : g.drafting ? (

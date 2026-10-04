@@ -14,7 +14,7 @@ export default function CalendarStrip({ entries }: { entries: CalendarEntry[] })
   return (
     <div className="card p-4">
       <div className="flex items-center gap-2 mb-3">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t("calendar.title")}</h3>
+        <h3 className="eyebrow">{t("calendar.title")}</h3>
         <span className="rounded-full bg-indigo-ink/[0.06] px-2 py-0.5 text-[10px] font-semibold text-indigo-ink/70 tabular-nums">
           {entries.length}
         </span>
@@ -28,6 +28,9 @@ export default function CalendarStrip({ entries }: { entries: CalendarEntry[] })
             }`}
           >
             <span aria-hidden className={`absolute inset-y-0 left-0 w-1 ${SEV_BAR[e.severity]}`} />
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              {new Date(e.date).toLocaleDateString("en-IN", { weekday: "short" })}
+            </p>
             <p className="font-semibold text-slate-700 tabular-nums">{new Date(e.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</p>
             <p className="mt-1 text-slate-600 leading-snug">{e.title}</p>
           </div>

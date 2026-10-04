@@ -100,6 +100,15 @@ function SchemeRow({ m }: { m: SchemeMatch }) {
         ))}
       </ul>
 
+      {!m.eligible && (
+        <div className="mt-2.5 flex items-center gap-2">
+          <div className="h-1 flex-1 max-w-40 rounded-full bg-slate-200/80 overflow-hidden">
+            <div className="h-full rounded-full bg-gradient-to-r from-slate-400 to-slate-500" style={{ width: `${Math.round(m.score * 100)}%` }} />
+          </div>
+          <span className="text-[10px] tabular-nums text-slate-400">{Math.round(m.score * 100)}% criteria met</span>
+        </div>
+      )}
+
       <details className="mt-2">
         <summary className="text-xs font-medium text-emerald-700 cursor-pointer select-none">
           {m.eligible ? t("benefits.whyQualify", { a: m.matchedWhy.length, b: s.criteria.length }) : t("benefits.criteriaCheck", { a: m.matchedWhy.length, b: s.criteria.length })}
