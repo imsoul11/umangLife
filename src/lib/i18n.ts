@@ -68,6 +68,15 @@ const en = {
   "profile.export": "Export data",
   "profile.import": "Import data",
   "profile.importError": "Could not import — not a valid backup file.",
+  "tile.nextAction": "Next best action",
+  "tile.allCaughtUp": "You're all caught up",
+  "tile.caughtUpBody": "Everything filed is tracking on your calendar.",
+  "tile.openForm": "Open form",
+  "tile.schemesMatch": "schemes match your profile",
+  "tile.viewMatches": "View matches",
+  "palette.placeholder": "Search journeys, pages, actions…",
+  "palette.noResults": "No matches — try “calendar” or “benefits”.",
+  "empty.kbdHint": "Jump anywhere with",
 } as const;
 
 export type TranslationKey = keyof typeof en;
@@ -141,6 +150,15 @@ const hi: Record<TranslationKey, string> = {
   "profile.export": "डेटा एक्सपोर्ट करें",
   "profile.import": "डेटा इंपोर्ट करें",
   "profile.importError": "इंपोर्ट नहीं हो सका — यह मान्य बैकअप फ़ाइल नहीं है।",
+  "tile.nextAction": "अगला ज़रूरी कदम",
+  "tile.allCaughtUp": "सब पूरा हो गया",
+  "tile.caughtUpBody": "दाख़िल हर आवेदन आपके कैलेंडर पर ट्रैक हो रहा है।",
+  "tile.openForm": "फ़ॉर्म खोलें",
+  "tile.schemesMatch": "योजनाएँ आपकी प्रोफ़ाइल से मेल खाती हैं",
+  "tile.viewMatches": "मिलान देखें",
+  "palette.placeholder": "जर्नी, पेज, क्रियाएँ खोजें…",
+  "palette.noResults": "कोई मेल नहीं — “calendar” या “benefits” आज़माएँ।",
+  "empty.kbdHint": "कहीं भी जाएँ — दबाएँ",
 };
 
 const DICT: Record<Locale, Record<TranslationKey, string>> = { en, hi };

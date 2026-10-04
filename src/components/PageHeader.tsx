@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useLocale } from "./LocaleProvider";
+import CommandPalette, { navigateCommands, type CommandItem } from "./CommandPalette";
 
 const NAV = [
   { href: "/", key: "nav.journeys" },
@@ -16,14 +18,28 @@ export default function PageHeader({
   title,
   subtitle,
   actions,
+  commandItems,
 }: {
   icon: React.ReactNode;
   title: React.ReactNode;
   subtitle: string;
   actions?: React.ReactNode;
+  commandItems?: CommandItem[];
 }) {
   const { t } = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  const items: CommandItem[] = [
+    ...navigateCommands(router, {
+      journeys: t("nav.journeys"),
+      benefits: t("nav.benefits"),
+      calendar: t("nav.calendar"),
+      about: t("nav.about"),
+    }),
+    ...(commandItems ?? []),
+  ];
 
   return (
     <header className="sticky top-0 z-40 glass border-b border-indigo-ink/[0.08] px-4 lg:px-6 py-3">
@@ -39,6 +55,16 @@ export default function PageHeader({
         </Link>
 
         <div className="flex flex-wrap items-center gap-1.5 text-[13px] ml-auto">
+          <button
+            onClick={() => setPaletteOpen(true)}
+            className="hidden sm:flex items-center gap-2 rounded-full glass ring-1 ring-indigo-ink/[0.08] shadow-sm px-3 py-1.5 text-xs text-slate-400 hover:text-slate-600 hover:ring-saffron/40 transition"
+            aria-label="Open command palette"
+          >
+            <span aria-hidden>🔍</span>
+            <span>Search…</span>
+            <span className="kbd">⌘</span>
+            <span className="kbd">K</span>
+          </button>
           <nav className="flex items-center gap-1 rounded-full glass ring-1 ring-indigo-ink/[0.07] shadow-sm p-1">
             {NAV.map(({ href, key }) => {
               const active = pathname === href;
@@ -50,7 +76,7 @@ export default function PageHeader({
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
                     active
                       ? "bg-indigo-ink text-white shadow-sm"
-                      : "text-slate-600 hover:text-saffron hover:bg-white/80"
+                      : "text-slate-600 hover:text-saffron hover:bg-white/80 hover:-translate-y-px"
                   }`}
                 >
                   {t(key)}
@@ -62,6 +88,7 @@ export default function PageHeader({
         </div>
       </div>
       <div className="hairline" aria-hidden />
+      <CommandPalette items={items} open={paletteOpen} onOpenChange={setPaletteOpen} />
     </header>
   );
 }
