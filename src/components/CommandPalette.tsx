@@ -15,6 +15,37 @@ export type CommandItem = {
 };
 
 /**
+ * fzf-style fuzzy match: every query char must appear in order (subsequence),
+ * scored by consecutive-run and word-start bonuses so tight matches rank first.
+ * Returns -1 when the haystack is not a subsequence match.
+ */
+export function fuzzyScore(haystack: string, query: string): number {
+  if (!query) return 0;
+  let score = 0;
+  let searchFrom = 0;
+  let lastIdx = -2;
+  let streak = 0;
+  for (const ch of query) {
+    const idx = haystack.indexOf(ch, searchFrom);
+    if (idx === -1) return -1;
+    score += 1;
+    if (idx === lastIdx + 1) {
+      streak += 1;
+      score += streak * 2; // consecutive chars = tight match
+    } else {
+      streak = 0;
+    }
+    if (idx === 0 || haystack[idx - 1] === " " || haystack[idx - 1] === "·") {
+      score += 4; // word-start hit
+    }
+    lastIdx = idx;
+    searchFrom = idx + 1;
+  }
+  score += Math.max(0, 8 - haystack.length / 6); // shorter haystacks rank higher
+  return score;
+}
+
+/**
  * ⌘K command palette — keyboard-first navigation & actions (Linear-style).
  * Mounted once in the header; opens via ⌘K / Ctrl+K or the header search pill.
  */
@@ -44,7 +75,11 @@ function PalettePanel({ items, onClose }: { items: CommandItem[]; onClose: (open
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return items;
-    return items.filter((it) => `${it.label} ${it.keywords ?? ""}`.toLowerCase().includes(q));
+    return items
+      .map((it) => ({ it, score: fuzzyScore(`${it.label} ${it.keywords ?? ""}`.toLowerCase(), q) }))
+      .filter(({ score }) => score >= 0)
+      .sort((a, b) => b.score - a.score)
+      .map(({ it }) => it);
   }, [items, query]);
 
   const activeIdx = Math.min(active, Math.max(filtered.length - 1, 0));
